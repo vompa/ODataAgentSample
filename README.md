@@ -1,4 +1,6 @@
 # ODataAgentSample
+[![CI](https://github.com/vompa/ODataAgentSample/actions/workflows/ci.yml/badge.svg)](https://github.com/vompa/ODataAgentSample/actions/workflows/ci.yml)
+
 
 **Vom OData-Service zum KI-Agenten-Backend.** Dieses Projekt baut das
 [ODataSample](https://github.com/vompa/ODataSample) (OData v4, EF Core, SQLite, Länder-Stammdaten) so um, dass derselbe
