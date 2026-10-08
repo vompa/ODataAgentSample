@@ -1,0 +1,38 @@
+[
+	{
+		"Id": 903,
+		"ISO": "AF",
+		"Name": "Africa",
+		"NameGER": "Afrika"
+	},
+	{
+		"Id": 904,
+		"ISO": "SA",
+		"Name": "Latin America and the Caribbean",
+		"NameGER": "Lateinamerika und Karibik"
+	},
+	{
+		"Id": 905,
+		"ISO": "NA",
+		"Name": "Northern America",
+		"NameGER": "Nordamerika"
+	},
+	{
+		"Id": 908,
+		"ISO": "EU",
+		"Name": "Europe",
+		"NameGER": "Europa"
+	},
+	{
+		"Id": 909,
+		"ISO": "OC",
+		"Name": "Oceania",
+		"NameGER": "Ozeanien"
+	},
+	{
+		"Id": 935,
+		"ISO": "AS",
+		"Name": "Asia",
+		"NameGER": "Asien"
+	}
+]

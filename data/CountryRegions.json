@@ -1,0 +1,156 @@
+[
+	{
+		"Id": 910,
+		"ISO": "AFE",
+		"Name": "Eastern Africa",
+		"NameGER": "Ostafrika",
+		"WorldRegionId": 903
+	},
+	{
+		"Id": 911,
+		"ISO": "AFM",
+		"Name": "Middle Africa",
+		"NameGER": "Mittelafrika",
+		"WorldRegionId": 903
+	},
+	{
+		"Id": 912,
+		"ISO": "AFN",
+		"Name": "Northern Africa",
+		"NameGER": "Nordafrika",
+		"WorldRegionId": 903
+	},
+	{
+		"Id": 913,
+		"ISO": "AFS",
+		"Name": "Southern Africa",
+		"NameGER": "Südafrika",
+		"WorldRegionId": 903
+	},
+	{
+		"Id": 914,
+		"ISO": "AFW",
+		"Name": "Western Africa",
+		"NameGER": "Westafrika",
+		"WorldRegionId": 903
+	},
+	{
+		"Id": 915,
+		"ISO": "SAC",
+		"Name": "Caribbean",
+		"NameGER": "Karibik",
+		"WorldRegionId": 904
+	},
+	{
+		"Id": 916,
+		"ISO": "SAE",
+		"Name": "Central America",
+		"NameGER": "Zentralamerika",
+		"WorldRegionId": 904
+	},
+	{
+		"Id": 931,
+		"ISO": "SAS",
+		"Name": "South America",
+		"NameGER": "Südamerika",
+		"WorldRegionId": 904
+	},
+	{
+		"Id": 905,
+		"ISO": "NAN",
+		"Name": "Northern America",
+		"NameGER": "Nordamerika",
+		"WorldRegionId": 905
+	},
+	{
+		"Id": 923,
+		"ISO": "EUE",
+		"Name": "Eastern Europe",
+		"NameGER": "Osteuropa",
+		"WorldRegionId": 908
+	},
+	{
+		"Id": 924,
+		"ISO": "EUN",
+		"Name": "Northern Europe",
+		"NameGER": "Nordeuropa",
+		"WorldRegionId": 908
+	},
+	{
+		"Id": 925,
+		"ISO": "EUS",
+		"Name": "Southern Europe",
+		"NameGER": "Südeuropa",
+		"WorldRegionId": 908
+	},
+	{
+		"Id": 926,
+		"ISO": "EUW",
+		"Name": "Western Europe",
+		"NameGER": "Westeuropa",
+		"WorldRegionId": 908
+	},
+	{
+		"Id": 927,
+		"ISO": "OCA",
+		"Name": "Australia and New Zealand",
+		"NameGER": "Australien und Neuseeland",
+		"WorldRegionId": 909
+	},
+	{
+		"Id": 928,
+		"ISO": "OCL",
+		"Name": "Melanesia",
+		"NameGER": "Melanesien",
+		"WorldRegionId": 909
+	},
+	{
+		"Id": 954,
+		"ISO": "OCM",
+		"Name": "Micronesia",
+		"NameGER": "Mikronesien",
+		"WorldRegionId": 909
+	},
+	{
+		"Id": 957,
+		"ISO": "OCP",
+		"Name": "Polynesia",
+		"NameGER": "Polynesien",
+		"WorldRegionId": 909
+	},
+	{
+		"Id": 906,
+		"ISO": "ASE",
+		"Name": "Eastern Asia",
+		"NameGER": "Ostasien",
+		"WorldRegionId": 935
+	},
+	{
+		"Id": 920,
+		"ISO": "ASA",
+		"Name": "South-Eastern Asia",
+		"NameGER": "Südostasien",
+		"WorldRegionId": 935
+	},
+	{
+		"Id": 922,
+		"ISO": "ASW",
+		"Name": "Western Asia",
+		"NameGER": "Westasien",
+		"WorldRegionId": 935
+	},
+	{
+		"Id": 5500,
+		"ISO": "ASC",
+		"Name": "Central Asia",
+		"NameGER": "Zentralasien",
+		"WorldRegionId": 935
+	},
+	{
+		"Id": 5501,
+		"ISO": "ASS",
+		"Name": "Southern Asia",
+		"NameGER": "Südasien",
+		"WorldRegionId": 935
+	}
+]

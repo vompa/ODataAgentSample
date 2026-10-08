@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+.idea/
+*.user
+TestResults/
+# lokale SQLite-Datenbank (wird beim Start aus data/*.json erzeugt)
+*.db
+*.db-shm
+*.db-wal

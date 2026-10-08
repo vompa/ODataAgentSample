@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OData" Version="9.4.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
+  </ItemGroup>
+
+  <!-- Seed-Daten aus dem Original-ODataSample, als Ressourcen in die Assembly eingebettet -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\data\*.json" LogicalName="Data.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ODataAgentSample.Tests" />
+  </ItemGroup>
+
+</Project>

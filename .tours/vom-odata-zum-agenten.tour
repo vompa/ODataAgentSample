@@ -1,0 +1,139 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "Vom OData-Service zum KI-Agenten-Backend",
+  "description": "Rundgang durch den Umbau des ODataSample: gleiche Daten, aber mit MCP-Tools, Rollen und Limits für Agenten.",
+  "steps": [
+    {
+      "title": "Überblick",
+      "file": "README.md",
+      "line": 1,
+      "description": "Ausgangspunkt ist das ODataSample (OData v4, EF Core, SQLite). Dieses Repo behält den OData-Service und ergänzt eine Agenten-Schicht.\n\nDie Tabelle \"Was wurde gegenüber dem ODataSample geändert\" ist die Argumentationslinie für den Umbau, die zweite Tabelle ordnet jedem OData-Aufruf ein MCP-Tool zu."
+    },
+    {
+      "title": "Die Daten: unverändert aus dem Original",
+      "file": "src/ODataAgentSample/Domain/Entities.cs",
+      "line": 8,
+      "description": "Dieselben drei Entitäten wie im ODataSample: WorldRegion, CountryRegion, Country. Die JSON-Seed-Daten liegen unverändert in `data/` und sind in die Assembly eingebettet.\n\nBeachte die Kommentare zu EU/EWR: Die Quelldaten kodieren Ja/Nein uneinheitlich."
+    },
+    {
+      "title": "Datenqualität an einer Stelle normalisieren",
+      "file": "src/ODataAgentSample/Domain/Entities.cs",
+      "line": 56,
+      "description": "Ein Datensatz (Mayotte) nutzt `J` statt `Y`. `Flags.IsYes` hält das fest; ein Test sichert es ab.\n\nZweiter Fund: `Countries.NameGER` enthält den *englischen* Langnamen. Deshalb taucht das Feld im Agenten-Vertrag (siehe Models.cs) nicht auf."
+    },
+    {
+      "title": "Startpunkt: Program.cs – Konfiguration",
+      "file": "src/ODataAgentSample/Program.cs",
+      "line": 25,
+      "description": "Die Konfiguration wird beim Start validiert (`ValidateOnStart`). Ohne gültigen API-Key startet der Server nicht: fail closed statt versehentlich offen."
+    },
+    {
+      "title": "Secure by default",
+      "file": "src/ODataAgentSample/Program.cs",
+      "line": 37,
+      "description": "Die Fallback-Policy verlangt Anmeldung für **jeden** Endpunkt. Wer einen neuen Endpunkt vergisst abzusichern, hat ihn trotzdem geschützt. Nur `/health` ist ausdrücklich anonym.\n\nDie Policy `Writer` schützt alle ändernden Operationen."
+    },
+    {
+      "title": "Rate Limiting",
+      "file": "src/ODataAgentSample/Program.cs",
+      "line": 42,
+      "description": "Begrenzung pro Client (oder pro IP, solange niemand angemeldet ist). Das bremst Key-Raten und Agenten, die in eine Endlosschleife geraten."
+    },
+    {
+      "title": "Zwei Welten, ein Host",
+      "file": "src/ODataAgentSample/Program.cs",
+      "line": 57,
+      "description": "Hier wird MCP registriert (`AddMcpServer` + `WithTools<CountryTools>`), direkt darunter der klassische OData-Service. Beide nutzen dasselbe EF-Core-Modell und dieselbe Authentifizierung."
+    },
+    {
+      "title": "Reihenfolge der Middleware",
+      "file": "src/ODataAgentSample/Program.cs",
+      "line": 78,
+      "description": "Authentication → RateLimiter → Authorization. Das Rate Limit steht nach der Authentifizierung (es kennt den Client), aber vor der Autorisierung, damit auch fehlgeschlagene Versuche gezählt werden."
+    },
+    {
+      "title": "API-Key-Handler",
+      "file": "src/ODataAgentSample/Security/ApiKeyAuthenticationHandler.cs",
+      "line": 29,
+      "description": "Der Key kommt als `X-Api-Key` oder `Authorization: Bearer`. Gespeichert ist nur der SHA-256-Hash; verglichen wird in konstanter Zeit."
+    },
+    {
+      "title": "Vergleich in konstanter Zeit",
+      "file": "src/ODataAgentSample/Security/ApiKeyAuthenticationHandler.cs",
+      "line": 39,
+      "description": "`FixedTimeEquals` und kein früher Abbruch der Schleife: Weder Timing noch die Position eines Treffers verraten etwas über gültige Keys.\n\nSHA-256 genügt hier, weil API-Keys zufällig und hochentropisch sind. Für Benutzerpasswörter wäre das falsch."
+    },
+    {
+      "title": "Rolle als Claim",
+      "file": "src/ODataAgentSample/Security/ApiKeyAuthenticationHandler.cs",
+      "line": 52,
+      "description": "Name und Rolle des Keys landen als Claims im Principal. Davon leben die Policy `Writer`, die Rollenprüfung im Tool und das Audit-Log."
+    },
+    {
+      "title": "OData: Schreibzugriff nur für writer",
+      "file": "src/ODataAgentSample/OData/CountriesController.cs",
+      "line": 15,
+      "description": "Gegenüber dem Original: Seitengröße und `MaxTop` begrenzt, `MaxExpansionDepth = 2`, und `POST`/`PATCH`/`DELETE` brauchen die Policy `Writer`. Die Regionen-Controller sind bewusst nur lesbar."
+    },
+    {
+      "title": "Das alte $search lebt weiter",
+      "file": "src/ODataAgentSample/OData/CountrySearchBinder.cs",
+      "line": 11,
+      "description": "Das eigene `$search` des Originals (z. B. `LaenderInEuropa`). Die Begriffe stammen aus `WorldRegionAliases`, derselben Quelle, die auch das Agent-Tool `search_countries` nutzt."
+    },
+    {
+      "title": "Der Agenten-Vertrag",
+      "file": "src/ODataAgentSample/Agent/Models.cs",
+      "line": 4,
+      "description": "Ein flaches, token-sparsames Abbild statt der verschachtelten OData-Entität. Bewusst weggelassen: das fehlbenannte `NameGER`. Spaltennamen sind für Modelle Dokumentation, also gestaltet man den Vertrag und reicht Spalten nicht 1:1 durch."
+    },
+    {
+      "title": "Die Tools",
+      "file": "src/ODataAgentSample/Agent/CountryTools.cs",
+      "line": 17,
+      "description": "Die Beschreibungen und Parametertexte sind für das Modell geschrieben, nicht für Menschen. Jede Beschreibung nennt auch das OData-Pendant (\"Entspricht in OData: …\").\n\n`ReadOnly`, `Idempotent` und `Destructive` sind MCP-Annotationen, anhand derer Clients Änderungen gesondert behandeln können."
+    },
+    {
+      "title": "Zweite Rollenprüfung im Tool",
+      "file": "src/ODataAgentSample/Agent/CountryTools.cs",
+      "line": 68,
+      "description": "`update_country` prüft die Rolle zusätzlich zum Handler. Offene Grenze (siehe README): Das Tool ist für `reader` in der Liste sichtbar und scheitert erst beim Aufruf."
+    },
+    {
+      "title": "Fehler, aus denen der Agent lernt",
+      "file": "src/ODataAgentSample/Agent/CountryTools.cs",
+      "line": 78,
+      "description": "Fachliche Eingabefehler gehen als Klartext an den Agenten zurück (\"Gültig: AF, SA, …\"), damit er sich selbst korrigiert. Alle anderen Fehler bleiben intern."
+    },
+    {
+      "title": "Audit-Log",
+      "file": "src/ODataAgentSample/Agent/CountryTools.cs",
+      "line": 91,
+      "description": "Wer hat welches Tool mit welchen Argumenten aufgerufen? Die Argumente werden auf 300 Zeichen gekürzt, damit das Log nicht überläuft."
+    },
+    {
+      "title": "Fachlogik mit festen Limits",
+      "file": "src/ODataAgentSample/Agent/CountryQueryService.cs",
+      "line": 18,
+      "description": "Wo ein OData-Client frei `$filter`/`$expand` formuliert, hat der Agent wenige, eng gefasste Operationen. `limit` wird auf höchstens 100 gekappt, Ergebnisse sind paginiert (`total`, `hasMore`)."
+    },
+    {
+      "title": "LIKE-Muster neutralisieren",
+      "file": "src/ODataAgentSample/Agent/CountryQueryService.cs",
+      "line": 28,
+      "description": "Freitext darf nie als Muster wirken: `%`, `_` und `\\` werden maskiert. Ein Test prüft, dass `%` und `_` keine Treffer liefern."
+    },
+    {
+      "title": "Region als ISO-Code oder altes Suchwort",
+      "file": "src/ODataAgentSample/Agent/CountryQueryService.cs",
+      "line": 114,
+      "description": "Akzeptiert `EU` genauso wie `LaenderInEuropa`. Bei unbekannten Werten nennt die Fehlermeldung alle gültigen Codes."
+    },
+    {
+      "title": "Tests als Beleg",
+      "file": "tests/ODataAgentSample.Tests/Agent/McpEndpointTests.cs",
+      "line": 9,
+      "description": "Ein echter MCP-Client spricht gegen den Server im Speicher: Tool-Discovery, Suche, Fehlertexte und – am wichtigsten – dass ein `reader`-Key nichts ändern kann.\n\nWeitere Bausteine: `AccessControlTests` (401/403), `CountryQueryServiceTests` (Logik, Datenfunde), `ODataEndpointTests` (der portierte Service)."
+    }
+  ]
+}
