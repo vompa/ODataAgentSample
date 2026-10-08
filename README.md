@@ -42,6 +42,12 @@ flowchart LR
     class ef,sqlite data
 ```
 
+## So sieht es aus
+
+![OData-Zugriff und MCP-Tools: 401 ohne Key, OData-Abfrage, Agent-Suche, Schreiben mit Reader- und Writer-Key](docs/img/odata-und-mcp.jpg)
+
+*Echte Aufrufe gegen den lokal laufenden Server (Ausgabe gekürzt). Grün zeigt erwartetes Verhalten, auch bei abgewiesenen Anfragen.*
+
 ## Was wurde gegenüber dem ODataSample geändert – und warum
 
 | Thema | ODataSample (Vorlage) | ODataAgentSample | Begründung |
