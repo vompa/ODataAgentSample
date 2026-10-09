@@ -11,6 +11,13 @@ public sealed class AppFactory : WebApplicationFactory<Program>
     public const string ReaderKey = "test-reader-key-0123456789";
     public const string WriterKey = "test-writer-key-0123456789";
 
+    public const string JwtIssuer = "test-issuer";
+    public const string JwtAudience = "test-audience";
+    public const string JwtSigningKey = "test-signing-key-0123456789-0123456789-0123456789-0123456789-abcdefghij";
+
+    /// <summary>Dieselben Werte, mit denen der Server startet. Damit stellen die Tests gültige und gezielt kaputte Tokens aus.</summary>
+    public static JwtOptions JwtSettings => new() { Issuer = JwtIssuer, Audience = JwtAudience, SigningKey = JwtSigningKey };
+
     private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"odata-agent-{Guid.NewGuid():N}.db");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -23,12 +30,22 @@ public sealed class AppFactory : WebApplicationFactory<Program>
         builder.UseSetting("Authentication:ApiKeys:1:Name", "test-writer");
         builder.UseSetting("Authentication:ApiKeys:1:KeySha256", ApiKeyHasher.Hash(WriterKey));
         builder.UseSetting("Authentication:ApiKeys:1:Role", Roles.Writer);
+        builder.UseSetting("Authentication:Jwt:Issuer", JwtIssuer);
+        builder.UseSetting("Authentication:Jwt:Audience", JwtAudience);
+        builder.UseSetting("Authentication:Jwt:SigningKey", JwtSigningKey);
     }
 
     public HttpClient CreateClientWithKey(string key)
     {
         var client = CreateClient();
         client.DefaultRequestHeaders.Add(ApiKeyDefaults.HeaderName, key);
+        return client;
+    }
+
+    public HttpClient CreateClientWithBearer(string token)
+    {
+        var client = CreateClient();
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
         return client;
     }
 
