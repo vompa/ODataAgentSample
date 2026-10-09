@@ -1,7 +1,7 @@
 namespace ODataAgentSample.Demo;
 
 /// <summary>
-/// Liefert Landingpage, Demo-Seite, Impressum, Datenschutz und die zugehoerigen Dateien aus den eingebetteten Ressourcen.
+/// Liefert Landingpage, Demo-Seite und die zugehoerigen Dateien aus den eingebetteten Ressourcen.
 /// Es werden nur Dateien aus dieser Liste ausgeliefert (kein Dateisystemzugriff, kein Pfad aus der Anfrage).
 /// Die Content-Security-Policy erlaubt nur eigene Skripte und Stile: kein Inline-Code, keine fremden Server.
 /// </summary>
@@ -17,8 +17,6 @@ public static class DemoWebAssets
     {
         MapPage(app, "/", "index.html");
         MapPage(app, "/demo", "demo.html");
-        MapPage(app, "/impressum", "impressum.html");
-        MapPage(app, "/datenschutz", "datenschutz.html");
 
         app.MapGet("/assets/{file}", (HttpContext context, string file) =>
             Serve(context, "assets/" + file, "no-cache")).AllowAnonymous();

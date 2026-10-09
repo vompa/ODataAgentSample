@@ -83,9 +83,8 @@ dann gesetzt sein:
 | `DEMO_COOKIE_KEY` | zufälliger Schlüssel, mindestens 32 Zeichen, signiert das Sitzungs-Cookie |
 | `DEMO_API_KEY` | zufälliger Reader-Key, mindestens 32 Zeichen, mit dem die Demo ihren eigenen `/mcp` aufruft |
 
-Nach dem Deployment sind unter der App-Adresse `/` (Landingpage), `/demo`, `/impressum` und `/datenschutz` erreichbar.
-**Vor der Weitergabe** die Seiten `impressum.html` und `datenschutz.html` unter `src/ODataAgentSample/Demo/Web/`
-ausfüllen und rechtlich prüfen lassen. Zum Abschalten das Secret `DEMO_ANTHROPIC_API_KEY` leeren und neu ausrollen.
+Nach dem Deployment sind unter der App-Adresse `/` (Landingpage) und `/demo` erreichbar. Impressum und
+Datenschutzseite gibt es bewusst nicht (nur Länderdaten, Lesezugriff für wenige Eingeladene). Zum Abschalten das Secret `DEMO_ANTHROPIC_API_KEY` leeren und neu ausrollen.
 Zu den Limits und Grenzen siehe den README-Abschnitt „Öffentliche Demo mit Chat“.
 
 ## Anbindung an einen Agenten

@@ -15,8 +15,8 @@
   <!-- Seed-Daten aus dem Original-ODataSample, als Ressourcen in die Assembly eingebettet -->
   <ItemGroup>
     <EmbeddedResource Include="..\..\data\*.json" LogicalName="Data.%(Filename)%(Extension)" />
-    <!-- Seiten der Demo (Landingpage, Demo, Impressum, Datenschutz, Stile, Skripte), ausgeliefert von DemoWebAssets -->
-    <EmbeddedResource Include="Demo\Web\**\*" LogicalName="Web/%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Seiten der Demo (Landingpage, Demo, Stile, Skripte), ausgeliefert von DemoWebAssets -->
+    <EmbeddedResource Include="Demo\Web\**\*" Exclude="**\*.stackdump;**\*.bak;**\*.tmp" LogicalName="Web/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

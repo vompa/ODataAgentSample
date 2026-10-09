@@ -10,7 +10,6 @@ public sealed class DemoDisabledTests
     [Theory]
     [InlineData("/")]
     [InlineData("/demo")]
-    [InlineData("/impressum")]
     [InlineData("/assets/site.css")]
     [InlineData("/api/demo/status")]
     public async Task By_default_nothing_of_the_demo_is_served(string path)
@@ -36,8 +35,6 @@ public sealed partial class DemoPageTests : IDisposable
     [Theory]
     [InlineData("/")]
     [InlineData("/demo")]
-    [InlineData("/impressum")]
-    [InlineData("/datenschutz")]
     public async Task Pages_are_served_without_a_key_with_a_strict_content_security_policy(string path)
     {
         using var client = _app.CreateClient();
@@ -111,7 +108,7 @@ public sealed partial class DemoPageTests : IDisposable
         using var client = _app.CreateClient();
         var external = new Regex(@"(src|href)\s*=\s*""https?://(?!github\.com/vompa/)", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(2));
 
-        foreach (var path in new[] { "/", "/demo", "/impressum", "/datenschutz" })
+        foreach (var path in new[] { "/", "/demo" })
         {
             var html = await client.GetStringAsync(new Uri(path, UriKind.Relative));
             Assert.False(external.IsMatch(html), $"{path} lädt etwas von einem fremden Server.");
@@ -272,7 +269,7 @@ public sealed class DemoLoginTests : IDisposable
 public sealed class DemoChatTests : IDisposable
 {
     private static readonly string[] PublicPaths =
-        ["/", "/demo", "/impressum", "/datenschutz", "/assets/demo.js", "/assets/landing.js", "/assets/site.css"];
+        ["/", "/demo", "/assets/demo.js", "/assets/landing.js", "/assets/site.css"];
 
     private static readonly string[] EvilTools = ["update_country", "web_search"];
 
