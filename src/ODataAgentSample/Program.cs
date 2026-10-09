@@ -2,6 +2,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.OData.Query.Expressions;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +65,22 @@ builder.Services.AddOptions<ApiKeyOptions>()
         "Jeder API-Key braucht Name, SHA-256-Hash (64 Hex-Zeichen) und Rolle 'reader' oder 'writer'.")
     .ValidateOnStart();
 
+// --- Hinter einem TLS-terminierenden Proxy (z. B. Azure Container Apps) kommen Schema und Client-IP nur in X-Forwarded-*-Headern an.
+// Ohne Auswertung erzeugt OData http://-Links, und das Rate Limit sieht fuer alle anonymen Clients die IP des Proxys.
+// Bewusst abschaltbar (Standard: aus): Wer die App direkt erreicht, koennte die Header faelschen und das IP-Limit umgehen.
+// Nur einschalten, wenn der Proxy der einzige Zugangsweg ist (in Azure ist er das).
+var forwardedHeaders = builder.Configuration.GetValue<bool>("ForwardedHeaders:Enabled");
+if (forwardedHeaders)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(o =>
+    {
+        o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        o.ForwardLimit = 1;           // nur den Eintrag des direkten Proxys, nicht die ganze Kette
+        o.KnownIPNetworks.Clear();    // Adressen des Proxys sind in Container Apps nicht vorab bekannt
+        o.KnownProxies.Clear();
+    });
+}
+
 // --- Authentifizierung & Autorisierung: standardmaessig ist alles geschuetzt, Aenderungen nur mit Rolle 'writer' ---
 // Zwei Anmeldearten: API-Key (immer) und OAuth2/JWT (wenn konfiguriert). Ein Policy-Schema wählt pro Anfrage den Handler.
 var authentication = builder.Services.AddAuthentication(jwt.IsEnabled ? AuthSchemes.Smart : ApiKeyDefaults.Scheme)
@@ -117,6 +134,11 @@ await using (var scope = app.Services.CreateAsyncScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     if (scope.ServiceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value.ReseedOnStartup)
         await DatabaseSeeder.ResetAndSeedAsync(db);
+}
+
+if (forwardedHeaders)
+{
+    app.UseForwardedHeaders();   // ganz vorn: Authentifizierung, Rate Limit und OData sollen Schema und IP schon kennen
 }
 
 app.UseAuthentication();

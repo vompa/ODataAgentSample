@@ -97,5 +97,7 @@ az group delete --name <rg>
 - Die erste Einrichtung der Container-Apps-Umgebung dauerte rund 15 Minuten, spätere Läufe unter 3 Minuten. Das
   OIDC-Token von `azure/login` gilt nur wenige Minuten, deshalb meldet sich der Workflow vor dem Registry-Login
   erneut an.
-- `@odata.context` in OData-Antworten enthält `http://` statt `https://`, weil die App hinter dem TLS-Proxy das Schema
-  nicht kennt (Forwarded-Headers sind nicht konfiguriert). Funktional ohne Folgen.
+- Hinter dem TLS-Proxy der Container Apps kommen Schema und Client-IP nur als `X-Forwarded-*` an. Die App wertet sie
+  aus, wenn `ForwardedHeaders__Enabled=true` gesetzt ist (im Bicep so eingestellt). Standardmäßig ist das aus: Wer die
+  App direkt erreicht, könnte die Header sonst fälschen und das IP-basierte Rate Limit umgehen. Ohne diese Einstellung
+  zeigten OData-Links `http://`, und das Limit sah für alle anonymen Clients die IP des Proxys.
