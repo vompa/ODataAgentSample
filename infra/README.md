@@ -42,10 +42,19 @@ az ad app federated-credential create --id <app-id> --parameters '{
   "audiences": ["api://AzureADTokenExchange"]
 }'
 
-# Rechte nur auf die Resource Group. Owner, weil die Bicep-Datei eine Rollenzuweisung (AcrPull) anlegt.
-az role assignment create --assignee <app-id> --role Owner \
+# Rechte nur auf die Resource Group. Die Bicep-Datei legt eine Rollenzuweisung (AcrPull) an, deshalb neben
+# Contributor auch der RBAC-Administrator (statt der weitergehenden Rolle Owner).
+az role assignment create --assignee <app-id> --role Contributor \
+  --scope /subscriptions/<subscription-id>/resourceGroups/<rg>
+az role assignment create --assignee <app-id> --role "Role Based Access Control Administrator" \
   --scope /subscriptions/<subscription-id>/resourceGroups/<rg>
 ```
+
+Hinweis zum Betreff des Federated Credentials: Je nach Repository-Einstellung schickt GitHub statt
+`repo:<owner>/<repo>:environment:azure` einen Betreff mit unveränderlichen IDs
+(`repo:<owner>@<owner-id>/<repo>@<repo-id>:environment:azure`). Meldet die Anmeldung
+`AADSTS700213 No matching federated identity record`, steht der erwartete Betreff in der Fehlermeldung. Dann ein
+zweites Credential mit genau diesem Betreff anlegen.
 
 Im GitHub-Repository unter *Settings → Secrets and variables → Actions*:
 
@@ -82,5 +91,11 @@ az group delete --name <rg>
 - Die API-Keys sind einfache gemeinsame Geheimnisse. Mit Entra ID (`Authentication:Jwt:Authority`) lässt sich später
   auf echte Token umstellen.
 - Die Container App ist öffentlich erreichbar, geschützt durch API-Key und Rate Limit.
-- Dieses Deployment ist bisher nicht gegen eine echte Azure-Subscription ausgeführt. Getestet sind der Docker-Build,
-  der Containerstart mit den Azure-Umgebungsvariablen und die Bicep-Kompilierung.
+- Das Deployment ist gegen eine echte Azure-Subscription ausgeführt und per Smoke-Test sowie von Hand geprüft
+  (`/health`, 401 ohne Key, 200 mit Reader-Key, 403 beim Schreiben als Reader, MCP-Tools). Die Entra-ID-Anmeldung
+  (`Authority`) ist damit weiterhin nicht gegen einen echten Identity Provider getestet.
+- Die erste Einrichtung der Container-Apps-Umgebung dauerte rund 15 Minuten, spätere Läufe unter 3 Minuten. Das
+  OIDC-Token von `azure/login` gilt nur wenige Minuten, deshalb meldet sich der Workflow vor dem Registry-Login
+  erneut an.
+- `@odata.context` in OData-Antworten enthält `http://` statt `https://`, weil die App hinter dem TLS-Proxy das Schema
+  nicht kennt (Forwarded-Headers sind nicht konfiguriert). Funktional ohne Folgen.

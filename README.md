@@ -54,6 +54,14 @@ flowchart LR
 
 *Zwei echte Läufe von Claude Code (`claude -p`) gegen den lokalen Server mit dem Reader-Key. Das GIF ist aus dem aufgezeichneten Transkript gerendert, keine Bildschirmaufnahme; Tool-Ergebnisse sind zusammengefasst. Im ersten Lauf lernt der Agent aus der Fehlermeldung von `get_country` und sucht stattdessen; im zweiten wird die Änderung ohne `writer`-Rolle abgewiesen, die Daten bleiben unverändert.*
 
+### Auf Azure
+
+Derselbe Ablauf gegen die Instanz auf **Azure Container Apps**, ausgerollt per GitHub Actions (OIDC-Anmeldung ohne gespeicherte Passwörter, Infrastruktur als Bicep, Smoke-Test nach dem Deployment):
+
+![Derselbe Agentenlauf gegen den MCP-Endpunkt auf Azure Container Apps](docs/img/agent-demo-azure.gif)
+
+*Wieder aus dem aufgezeichneten Transkript gerendert, keine Bildschirmaufnahme. Die Daten in Azure sind flüchtig (SQLite im Container, Scale-to-zero, eine Replik). Aufbau, Kosten, Einrichtung und Grenzen stehen in [infra/README.md](infra/README.md).*
+
 ## Was wurde gegenüber dem ODataSample geändert – und warum
 
 | Thema | ODataSample (Vorlage) | ODataAgentSample | Begründung |
