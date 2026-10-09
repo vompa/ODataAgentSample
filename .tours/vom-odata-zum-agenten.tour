@@ -1,7 +1,7 @@
 {
   "$schema": "https://aka.ms/codetour-schema",
   "title": "Vom OData-Service zum KI-Agenten-Backend",
-  "description": "Rundgang durch den Umbau des ODataSample: gleiche Daten, aber mit MCP-Tools, Rollen und Limits für Agenten.",
+  "description": "Rundgang durch den Umbau des ODataSample: gleiche Daten, aber mit MCP-Tools, Rollen und Limits für Agenten, dazu Swagger-Oberfläche und Deployment auf Azure.",
   "steps": [
     {
       "title": "Überblick",
@@ -24,32 +24,50 @@
     {
       "title": "Startpunkt: Program.cs – Konfiguration",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 58,
+      "line": 59,
       "description": "Die Konfiguration wird beim Start validiert (`ValidateOnStart`). Ohne eine Anmeldeart (weder API-Key noch JWT) startet der Server nicht: fail closed statt versehentlich offen. Ist der Abschnitt `Authentication:Jwt` gesetzt, muss er vollständig und gültig sein, sonst bricht der Start mit einer Klartext-Meldung ab."
+    },
+    {
+      "file": "src/ODataAgentSample/Program.cs",
+      "line": 72,
+      "title": "Hinter dem Proxy: Forwarded Headers",
+      "description": "In Azure terminiert ein Proxy das TLS. Ohne Auswertung von `X-Forwarded-Proto` erzeugte OData Links mit `http://`, und das Rate Limit sah für alle anonymen Clients dieselbe IP.\n\nDie Auswertung ist **standardmäßig aus**: Wer die App direkt erreicht, könnte die Header fälschen und das IP-Limit umgehen. Eingeschaltet wird sie nur im Deployment (`ForwardedHeaders__Enabled=true`), wo der Proxy der einzige Zugangsweg ist. `ForwardLimit = 1` nimmt nur den Eintrag des direkten Proxys."
     },
     {
       "title": "Secure by default",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 81,
+      "line": 98,
       "description": "Die Fallback-Policy verlangt für **jeden** Endpunkt eine Anmeldung **und** mindestens die Rolle `reader`. Wer einen neuen Endpunkt vergisst abzusichern, hat ihn trotzdem geschützt. Ein gültiges Token ohne passenden Scope ist angemeldet, aber nicht berechtigt: 403. Nur `/health` ist ausdrücklich anonym.\n\nDie Policy `Writer` schützt alle ändernden Operationen."
     },
     {
       "title": "Rate Limiting",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 86,
-      "description": "Begrenzung pro Client (oder pro IP, solange niemand angemeldet ist). Das bremst Key-Raten und Agenten, die in eine Endlosschleife geraten."
+      "line": 103,
+      "description": "Begrenzung pro Client (oder pro IP, solange niemand angemeldet ist). Das bremst Key-Raten und Agenten, die in eine Endlosschleife geraten. Hinter einem Proxy sieht die App für anonyme Anfragen sonst nur die IP des Proxys, siehe den nächsten Abschnitt zu den Forwarded Headers."
     },
     {
       "title": "Zwei Welten, ein Host",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 101,
+      "line": 118,
       "description": "Hier wird MCP registriert (`AddMcpServer` + `WithTools<CountryTools>`), direkt darunter der klassische OData-Service. Beide nutzen dasselbe EF-Core-Modell und dieselbe Authentifizierung."
     },
     {
       "title": "Reihenfolge der Middleware",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 122,
-      "description": "Authentication → RateLimiter → Authorization. Das Rate Limit steht nach der Authentifizierung (es kennt den Client), aber vor der Autorisierung, damit auch fehlgeschlagene Versuche gezählt werden."
+      "line": 144,
+      "description": "ForwardedHeaders (nur wenn eingeschaltet) → Authentication → RateLimiter → Swagger-Oberfläche (nur wenn eingeschaltet) → Authorization.\n\nDas Rate Limit steht nach der Authentifizierung (es kennt den Client), aber vor der Autorisierung, damit auch fehlgeschlagene Versuche gezählt werden. Die Swagger-Middleware muss **vor** `UseAuthorization` liegen: Die Fallback-Policy verlangt sonst auch für die Oberfläche eine Anmeldung. Das hat ein Test gezeigt (401 statt 200)."
+    },
+    {
+      "file": "src/ODataAgentSample/Program.cs",
+      "line": 150,
+      "title": "Swagger: beschreiben, nicht öffnen",
+      "description": "Mit `OpenApi:Enabled` gibt es unter `/swagger` eine Oberfläche, das Dokument liegt unter `/openapi/odata.json`. Beides ist anonym lesbar, weil es nur die Schnittstelle beschreibt. Alle Aufrufe aus der Oberfläche brauchen weiterhin den API-Key (Schaltfläche *Authorize*), Daten und `/mcp` liefern ohne Key 401.\n\nStandard ist **aus**; eingeschaltet im Development-Profil und im Azure-Deployment."
+    },
+    {
+      "file": "src/ODataAgentSample/OData/ODataOpenApi.cs",
+      "line": 69,
+      "title": "Das Dokument darf nichts versprechen",
+      "description": "Der Generator beschreibt alles, was das EDM-Modell theoretisch erlaubt, zum Beispiel `POST` auf `WorldRegions`. Die API liefert dort 405. Dieser Filter lässt nur zu, was wirklich geht: lesen überall, `POST`, `PATCH` und `DELETE` nur auf `Countries`. Ein Test hält das fest.\n\nGefunden hat das der praktische Versuch in der Oberfläche, nicht die Tests der ersten Fassung. Außerdem nutzt das Dokument eine relative Server-URL (`/odata/v1`) und hängt nicht vom Host-Header ab."
     },
     {
       "title": "API-Key-Handler",
@@ -156,7 +174,7 @@
     {
       "title": "Tests als Beleg",
       "file": "tests/ODataAgentSample.Tests/Agent/McpEndpointTests.cs",
-      "line": 9,
+      "line": 10,
       "description": "Ein echter MCP-Client spricht gegen den Server im Speicher: Tool-Discovery, Suche, Fehlertexte und – am wichtigsten – dass ein `reader`-Key nichts ändern kann.\n\nWeitere Bausteine: `AccessControlTests` (401/403), `CountryQueryServiceTests` (Logik, Datenfunde), `ODataEndpointTests` (der portierte Service)."
     },
     {
@@ -164,6 +182,30 @@
       "line": 14,
       "title": "JWT-Tests mit gezielt kaputten Tokens",
       "description": "Neben gültigen Tokens werden acht Arten von kaputten Tokens gebaut: abgelaufen, noch nicht gültig, falscher Schlüssel, falsche Zielgruppe, falscher Aussteller, anderer Algorithmus, unsigniert und Müll. Alle müssen 401 ergeben. Dazu kommen Scope- und Rollen-Fälle, der API-Key neben JWT und MCP mit Token.\n\nWichtig: Die Tests prüfen die Validierung mit lokal signierten Tokens. Der Weg über `Authority` mit OIDC-Discovery ist nicht gegen einen echten Identity Provider getestet."
+    },
+    {
+      "file": "tests/ODataAgentSample.Tests/OData/OpenApiTests.cs",
+      "line": 12,
+      "title": "Swagger-Tests: Standard aus, Daten bleiben zu",
+      "description": "Ohne die Einstellung werden weder Oberfläche noch Dokument ausgeliefert. Eingeschaltet sind beide anonym erreichbar, das Dokument enthält das API-Key-Schema und nur unterstützte Operationen, und `/odata/v1/Countries`, `$metadata` und `/mcp` liefern weiterhin 401.\n\nDazu `ForwardedHeadersTests`: Die Header wirken nur mit eingeschalteter Einstellung. Ohne die Middleware wird der erste Test nachweislich rot."
+    },
+    {
+      "file": "Dockerfile",
+      "line": 20,
+      "title": "Ins Image: nicht als root",
+      "description": "Multi-Stage-Build: SDK-Image zum Bauen, schlankes ASP.NET-Image zum Laufen. Der Container läuft als Benutzer `app`, die Datenbank liegt unter `/tmp` und wird beim Start aus den eingebetteten JSON-Dateien neu aufgebaut, also flüchtig. Das passt zu einer Demo und zu Scale-to-zero."
+    },
+    {
+      "file": "infra/main.bicep",
+      "line": 62,
+      "title": "Infrastruktur als Code",
+      "description": "Registry ohne Admin-Zugang: Die Container App holt das Image über eine Managed Identity mit der Rolle AcrPull, es gibt kein gemeinsames Passwort. Die Keys kommen als Secrets, die Replikenzahl ist auf 1 festgelegt (jede Replik hätte sonst ihre eigene SQLite-Datenbank), und das Log-Kontingent ist gedeckelt.\n\nDas Bicep läuft in zwei Stufen, weil die App ein Image braucht, das erst nach der Registry existiert."
+    },
+    {
+      "file": ".github/workflows/deploy-azure.yml",
+      "line": 9,
+      "title": "Deployment ohne Passwörter",
+      "description": "Die Anmeldung bei Azure läuft über OpenID Connect mit einem Federated Credential, das nur dieser Umgebung im Repo vertraut. Es gibt kein Client-Secret. Zwei Stolpersteine aus der Praxis: GitHub schickt je nach Repo einen Betreff mit unveränderlichen IDs, und das Token gilt nur wenige Minuten. Deshalb meldet sich der Workflow nach der langen Einrichtung der Umgebung erneut an.\n\nDer Lauf ist nur manuell auslösbar, weil er Geld kostet."
     }
   ]
 }
