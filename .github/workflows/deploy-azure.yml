@@ -69,6 +69,11 @@ jobs:
           LOGIN_SERVER: ${{ steps.infra.outputs.login_server }}
           READER_KEY_SHA256: ${{ secrets.READER_KEY_SHA256 }}
           WRITER_KEY_SHA256: ${{ secrets.WRITER_KEY_SHA256 }}
+          # Demo (optional): Ist DEMO_ANTHROPIC_API_KEY leer, bleibt die Demo aus
+          DEMO_ANTHROPIC_API_KEY: ${{ secrets.DEMO_ANTHROPIC_API_KEY }}
+          DEMO_ACCESS_CODE_SHA256: ${{ secrets.DEMO_ACCESS_CODE_SHA256 }}
+          DEMO_COOKIE_KEY: ${{ secrets.DEMO_COOKIE_KEY }}
+          DEMO_API_KEY: ${{ secrets.DEMO_API_KEY }}
         run: |
           az deployment group create \
             --resource-group "$RESOURCE_GROUP" \
@@ -77,6 +82,10 @@ jobs:
                          image="$LOGIN_SERVER/$IMAGE_NAME:$GITHUB_SHA" \
                          readerKeySha256="$READER_KEY_SHA256" \
                          writerKeySha256="$WRITER_KEY_SHA256" \
+                         demoAnthropicApiKey="$DEMO_ANTHROPIC_API_KEY" \
+                         demoAccessCodeSha256="$DEMO_ACCESS_CODE_SHA256" \
+                         demoCookieKey="$DEMO_COOKIE_KEY" \
+                         demoApiKey="$DEMO_API_KEY" \
             --query properties.outputs --output json > outputs.json
           echo "fqdn=$(jq -r .appFqdn.value outputs.json)" >> "$GITHUB_OUTPUT"
 

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <title>ODataAgentSample – Frag deine Daten</title>
+  <meta name="description" content="Ein KI-Agent beantwortet Fragen zu Länderdaten und nutzt dafür einen OData-Dienst über das Model Context Protocol (MCP).">
+  <link rel="stylesheet" href="/assets/site.css">
+  <script src="/assets/landing.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+        ODataAgentSample
+      </a>
+      <a class="btn btn-ghost btn-small" href="#anmelden">Zugang</a>
+    </div>
+  </header>
+
+  <main id="inhalt">
+    <section class="wrap hero" aria-labelledby="titel">
+      <div>
+        <span class="eyebrow">Live-Demo · Model Context Protocol</span>
+        <h1 id="titel">Frag deine Daten. <span class="grad-text">Ein KI-Agent antwortet – über MCP.</span></h1>
+        <p class="lead">Ein echtes Claude-Modell ruft die Tools eines OData-Dienstes auf, liest Länderdaten und erklärt sein Ergebnis. Jeder Schritt bleibt dabei live sichtbar.</p>
+        <div class="hero-cta">
+          <a class="btn" href="#anmelden">Demo ausprobieren</a>
+          <a class="btn btn-ghost" href="#so-funktioniert-es">So funktioniert es</a>
+        </div>
+      </div>
+
+      <div class="trace-preview" role="img" aria-label="Animierte Vorschau: Der Agent ruft get_country mit Island auf, erhält einen Fehler, korrigiert sich mit search_countries und erhält 21 Treffer.">
+        <div class="trace-title"><span class="trace-dots"><i></i><i></i><i></i></span> Tool-Spur</div>
+        <div class="trace-step">
+          <div><span class="name">get_country</span>(<span class="args">{"code":"Island"}</span>)</div>
+          <span class="st err">✕ Fehler: Kein Land zu 'Island' gefunden. Verwende einen ISO2-Code …</span>
+        </div>
+        <div class="trace-step">
+          <div><span class="name">search_countries</span>(<span class="args">{"text":"Island"}</span>)</div>
+          <span class="st ok">✓ OK: 21 Treffer · 123 ms</span>
+        </div>
+        <div class="trace-step">
+        </div>
+        <div class="trace-answer">Der ISO3-Code von Island ist ISL. <span class="cursor"></span></div>
+      </div>
+    </section>
+
+    <section class="wrap section" id="so-funktioniert-es" aria-labelledby="h-schritte">
+      <h2 id="h-schritte">So funktioniert es</h2>
+      <ol class="steps">
+        <li class="card"><h3>Frage stellen</h3><p>Du schreibst eine Frage zu 264 Ländern und 6 Weltregionen in normaler Sprache.</p></li>
+        <li class="card"><h3>Agent ruft Tools auf</h3><p>Das Modell wählt selbst zwischen <code>search_countries</code>, <code>get_country</code> und <code>list_regions</code> und korrigiert sich bei Fehlern.</p></li>
+        <li class="card"><h3>Antwort mit sichtbarer Spur</h3><p>Du siehst die Antwort und daneben jeden Tool-Aufruf mit Argumenten, Status und Dauer.</p></li>
+      </ol>
+    </section>
+
+    <section class="wrap section two-col" aria-label="Sicherheit und Ehrlichkeit">
+      <div class="card">
+        <h2>Sicher gebaut</h2>
+        <ul class="facts">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><strong>Nur Lesezugriff:</strong> Die Tools können nichts schreiben oder ändern.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><strong>API-Key serverseitig:</strong> Er gelangt nie in deinen Browser.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><strong>Rate Limits:</strong> 100 Abfragen pro Stunde für alle, 15 pro Sitzung und Stunde, 400 pro Tag.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><strong>Keine Personendaten gespeichert:</strong> Es gibt keine Konten und kein Tracking.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><strong>Zugangscode für Eingeladene:</strong> Ohne Code kein Zugriff.</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>Ehrlich gesagt</h2>
+        <ul class="facts">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>Es antwortet ein <strong>echtes Modell</strong>. Antworten und Tool-Wege können abweichen.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>Das Kontingent kann bei einem <strong>Neustart zurückgesetzt</strong> werden.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>Die Daten sind <strong>flüchtige Demo-Daten</strong> und nicht als Quelle gedacht.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>Der erste Aufruf kann wegen eines <strong>Kaltstarts</strong> einige Sekunden dauern.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="wrap section" id="anmelden" aria-labelledby="h-login">
+      <div class="card login-card">
+        <h2 id="h-login">Zugang zur Demo</h2>
+
+        <form id="login-form" novalidate>
+          <p>Den Zugangscode erhältst du vom Betreiber.</p>
+          <div class="field">
+            <label for="code">Zugangscode</label>
+            <input id="code" name="code" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+          </div>
+          <button class="btn" id="login-btn" type="submit">Anmelden</button>
+        </form>
+
+        <div id="already" class="hidden">
+          <p>Du bist bereits angemeldet.</p>
+          <a class="btn" href="/demo">Zur Demo</a>
+        </div>
+
+        <div id="login-status" class="status info" role="status" aria-live="polite"></div>
+
+        <div class="link-row">
+          <a href="https://github.com/vompa/ODataAgentSample" rel="noopener noreferrer">GitHub</a>
+          <a href="https://github.com/vompa/ODataAgentSample/releases" rel="noopener noreferrer">Releases</a>
+          <a href="/swagger">Swagger-Oberfläche</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>ODataAgentSample · Demo</span>
+      <nav aria-label="Rechtliches">
+        <a href="/impressum">Impressum</a>
+        <a href="/datenschutz">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

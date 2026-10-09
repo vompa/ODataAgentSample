@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.OData.Query.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using ODataAgentSample.Agent;
+using ODataAgentSample.Demo;
 using ODataAgentSample.Infrastructure.Db;
 using ODataAgentSample.OData;
 using ODataAgentSample.Security;
@@ -55,6 +56,14 @@ builder.Services.AddOptions<DatabaseOptions>().Bind(builder.Configuration.GetSec
 var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
 builder.Services.AddOptions<JwtOptions>().Bind(builder.Configuration.GetSection(JwtOptions.SectionName)).ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
+
+// Oeffentliche Demo (Landingpage, Zugangscode, Chat mit Claude ueber den eigenen MCP-Server). Standard: aus.
+// Eingeschaltet muessen alle Geheimnisse gesetzt sein (siehe DemoOptions), sonst startet die App nicht.
+var demoEnabled = builder.Configuration.GetValue<bool>("Demo:Enabled");
+if (demoEnabled)
+{
+    builder.Services.AddDemo(builder.Configuration);
+}
 
 builder.Services.AddOptions<ApiKeyOptions>()
     .Bind(builder.Configuration.GetSection(ApiKeyOptions.SectionName))
@@ -168,6 +177,11 @@ if (openApi)
 app.MapGet("/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
 app.MapControllers();
 app.MapMcp("/mcp");
+
+if (demoEnabled)
+{
+    app.MapDemo();
+}
 
 app.Run();
 

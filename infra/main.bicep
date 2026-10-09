@@ -36,6 +36,27 @@ param maxReplicas int = 1
 @description('Anfragen pro Minute und Client (Rate Limit der Anwendung).')
 param requestsPerMinute int = 60
 
+@description('Anthropic-API-Key der Demo. Leer = Demo (Landingpage, Anmeldung, Chat) ist aus. Gesetzt = Demo ist an und braucht auch die drei Werte darunter.')
+@secure()
+param demoAnthropicApiKey string = ''
+
+@description('SHA-256 (64 Hex-Zeichen) des Zugangscodes, den du an Eingeladene gibst.')
+@secure()
+param demoAccessCodeSha256 string = ''
+
+@description('Schluessel (mind. 32 Zeichen) zum Signieren des Sitzungs-Cookies.')
+@secure()
+param demoCookieKey string = ''
+
+@description('Reader-Key (mind. 32 Zeichen), mit dem die Demo ihren eigenen MCP-Endpunkt aufruft. Wird nur als Reader registriert.')
+@secure()
+param demoApiKey string = ''
+
+@description('Claude-Modell der Demo.')
+param demoModel string = 'claude-haiku-5-5'
+
+var demoEnabled = !empty(demoAnthropicApiKey)
+
 var suffix = uniqueString(resourceGroup().id)
 var registryName = 'acr${suffix}' // global eindeutig, nur Kleinbuchstaben und Ziffern
 var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
@@ -120,7 +141,13 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = if (deployApp) {
       ]
       secrets: concat(
         [{ name: 'reader-key-sha256', value: readerKeySha256 }],
-        empty(writerKeySha256) ? [] : [{ name: 'writer-key-sha256', value: writerKeySha256 }]
+        empty(writerKeySha256) ? [] : [{ name: 'writer-key-sha256', value: writerKeySha256 }],
+        !demoEnabled ? [] : [
+          { name: 'demo-anthropic-key', value: demoAnthropicApiKey }
+          { name: 'demo-access-code-sha256', value: demoAccessCodeSha256 }
+          { name: 'demo-cookie-key', value: demoCookieKey }
+          { name: 'demo-api-key', value: demoApiKey }
+        ]
       )
     }
     template: {
@@ -145,6 +172,15 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = if (deployApp) {
               { name: 'Authentication__ApiKeys__1__Name', value: 'writer' }
               { name: 'Authentication__ApiKeys__1__KeySha256', secretRef: 'writer-key-sha256' }
               { name: 'Authentication__ApiKeys__1__Role', value: 'writer' }
+            ],
+            // Oeffentliche Demo: Landingpage, Zugang mit Code, Chat mit Claude ueber den eigenen MCP-Server (nur lesend)
+            !demoEnabled ? [] : [
+              { name: 'Demo__Enabled', value: 'true' }
+              { name: 'Demo__Model', value: demoModel }
+              { name: 'Demo__AnthropicApiKey', secretRef: 'demo-anthropic-key' }
+              { name: 'Demo__AccessCodeSha256', secretRef: 'demo-access-code-sha256' }
+              { name: 'Demo__CookieKey', secretRef: 'demo-cookie-key' }
+              { name: 'Demo__ApiKey', secretRef: 'demo-api-key' }
             ]
           )
           probes: [

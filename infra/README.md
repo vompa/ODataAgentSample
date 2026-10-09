@@ -70,6 +70,24 @@ Im GitHub-Repository unter *Settings → Secrets and variables → Actions*:
 
 Außerdem unter *Settings → Environments* eine Umgebung `azure` anlegen (optional mit Genehmigung durch dich).
 
+### Optional: die öffentliche Demo mit Chat
+
+Die Demo (Landingpage, Zugang mit Code, Chat mit Claude über den eigenen MCP-Server) ist **nur an, wenn
+`DEMO_ANTHROPIC_API_KEY` gesetzt ist**. Ohne dieses Secret ändert sich am Deployment nichts. Alle vier Secrets müssen
+dann gesetzt sein:
+
+| Secret | Inhalt |
+|---|---|
+| `DEMO_ANTHROPIC_API_KEY` | dein Anthropic-Key (vorher in der Anthropic-Konsole ein **Ausgabenlimit** setzen) |
+| `DEMO_ACCESS_CODE_SHA256` | SHA-256 des Zugangscodes: `printf %s "<code>" \| sha256sum` (den Code selbst gibst du an Eingeladene) |
+| `DEMO_COOKIE_KEY` | zufälliger Schlüssel, mindestens 32 Zeichen, signiert das Sitzungs-Cookie |
+| `DEMO_API_KEY` | zufälliger Reader-Key, mindestens 32 Zeichen, mit dem die Demo ihren eigenen `/mcp` aufruft |
+
+Nach dem Deployment sind unter der App-Adresse `/` (Landingpage), `/demo`, `/impressum` und `/datenschutz` erreichbar.
+**Vor der Weitergabe** die Seiten `impressum.html` und `datenschutz.html` unter `src/ODataAgentSample/Demo/Web/`
+ausfüllen und rechtlich prüfen lassen. Zum Abschalten das Secret `DEMO_ANTHROPIC_API_KEY` leeren und neu ausrollen.
+Zu den Limits und Grenzen siehe den README-Abschnitt „Öffentliche Demo mit Chat“.
+
 ## Anbindung an einen Agenten
 
 ```bash

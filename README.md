@@ -126,6 +126,48 @@ Operationen, die die API wirklich anbietet: lesen auf allen drei Mengen, `POST`,
 - Das Dokument verwendet eine relative Server-URL (`/odata/v1`) und hängt damit nicht vom Host-Header ab.
 - Hinweis: Swagger deckt nur OData ab. Der MCP-Endpunkt `/mcp` ist kein REST und steht nicht darin.
 
+### Öffentliche Demo mit Chat (optional)
+
+Mit `Demo:Enabled=true` bekommt die App eine **Landingpage** (`/`), eine **Demo-Seite** (`/demo`) und eine kleine
+Schnittstelle (`/api/demo/*`). Eingeladene melden sich mit einem gemeinsamen **Zugangscode** an und stellen Fragen zu
+den Länderdaten. Ein echtes Claude-Modell ruft dafür die MCP-Tools dieser App auf, die Seite zeigt Antwort **und**
+Tool-Aufrufe live (inklusive Fehlern und Korrekturen). Standard ist **aus**; eingeschaltet müssen alle Geheimnisse
+gesetzt sein, sonst startet die App nicht.
+
+| Einstellung | Bedeutung |
+|---|---|
+| `Demo:AnthropicApiKey` | Anthropic-Key, bleibt auf dem Server |
+| `Demo:AccessCodeSha256` | SHA-256 des Zugangscodes (`printf %s "<code>" \| sha256sum`) |
+| `Demo:CookieKey` | Schlüssel (mind. 32 Zeichen) für das signierte Sitzungs-Cookie |
+| `Demo:ApiKey` | Reader-Key (mind. 32 Zeichen), mit dem die Demo ihren eigenen `/mcp` aufruft |
+| `Demo:Model` | Standard `claude-haiku-5-5` |
+
+**Was fest eingebaut ist (und getestet wird):**
+
+- **Nur deine Tools:** Claude sieht ausschließlich `search_countries`, `get_country` und `list_regions`. Es gibt keine
+  eingebauten Claude-Werkzeuge, und `update_country` ist nicht dabei. Selbst wenn das Modell ein anderes Tool anfordert,
+  erreicht der Aufruf den MCP-Server nie.
+- **Nur lesend:** Die Demo ruft `/mcp` mit einem Reader-Key auf. Der Server lehnt jede Änderung mit 403 ab.
+- **Ein Ziel:** Die App verbindet sich nur mit dem eigenen Port (oder einer Loopback-Adresse aus der Konfiguration).
+  Der Browser liefert nur den Prompt-Text: Modell, Tools, Ziel und Grenzen kann er nicht beeinflussen.
+- **Limits:** 100 Abfragen pro Stunde für alle, 15 pro Sitzung und Stunde, 400 pro Tag (gleitendes Fenster), dazu
+  höchstens 300 Zeichen pro Frage, 6 Tool-Runden und eine begrenzte Antwortlänge.
+- **Anmeldung:** Der Zugangscode wird nur als Hash gespeichert und in konstanter Zeit verglichen. Fehlversuche werden
+  gebremst (5 pro Client und 10 Minuten). Die Sitzung ist ein signiertes Cookie (`HttpOnly`, `SameSite=Strict`), alle
+  POST-Aufrufe brauchen den Header `X-Demo`.
+- **Keine Personendaten:** Es gibt keine Konten und keine Datenbank für die Demo. Anthropic bekommt nur einen Hash der
+  Sitzung.
+- Die Seiten laufen unter einer strengen Content-Security-Policy (kein Inline-Code, keine fremden Server, keine Tracker).
+
+**Grenzen, ehrlich:**
+
+- Das Kontingent liegt im Speicher. Ein Neustart (auch Scale-to-zero in Azure) setzt es zurück. Die harte
+  Kostengrenze ist daher das **Ausgabenlimit in der Anthropic-Konsole**, das du vorher setzen solltest.
+- Ob eine Frage zum Thema passt, entscheidet am Ende das Modell. Der Systemtext begrenzt es auf die Länderdaten, ein
+  harter Schutz ist das nicht. Die Limits begrenzen den Schaden.
+- `Impressum` und `Datenschutz` sind **Platzhalter**. Sie müssen vor öffentlicher Nutzung ausgefüllt und geprüft werden.
+- Die Tests prüfen alles außer dem echten Modellaufruf (dafür braucht es einen Anthropic-Key).
+
 ### An einen Agenten anbinden
 
 Mit der Reader-Rolle kann der Agent Daten lesen:
@@ -301,6 +343,7 @@ dotnet test
 | `ApiKeyHasherTests` | SHA-256-Testvektor, Hash-Validierung |
 | `JwtAuthenticationTests` | Scopes und App-Rollen, 403 ohne passenden Scope, 401 bei abgelaufenem, noch nicht gültigem, falsch signiertem, fremdem (Zielgruppe, Aussteller), unsigniertem und anders signiertem (HS512) Token; API-Key daneben; MCP mit JWT |
 | `OpenApiTests` | Swagger standardmäßig aus; eingeschaltet anonym erreichbar, Dokument mit API-Key-Schema, nur tatsächlich unterstützte Operationen, unabhängig vom Host-Header, Daten und `/mcp` weiterhin geschützt |
+| `Demo*Tests` | Kontingent (Stunde/Sitzung/Tag, parallel), Sitzungs-Cookie (Fälschung, Ablauf), Anmeldebremse, Tool-Allowlist und die Anfrage an Claude, Seiten mit strenger CSP ohne Inline-Code, Anmeldung, Chat-Strom, keine Geheimnisse in Antworten, Demo-Key nur lesend |
 | `ForwardedHeadersTests` | `X-Forwarded-Proto` nur mit aktivierter Einstellung ausgewertet (https-Links hinter dem Proxy) |
 | `JwtOptionsTests` | Konfigurationsprüfung (Pflichtwerte, Schlüssellänge, HTTPS-Authority), Start bricht bei kaputter Konfiguration ab, Claim-zu-Rolle-Abbildung, Auswahl API-Key/JWT, Token-Aussteller |
 
@@ -320,6 +363,7 @@ src/ODataAgentSample/
   OData/                        EDM-Modell, Controller, $search-Binder  (portiert), OpenAPI-Dokument (neu)
   Agent/                        Service, Modelle und MCP-Tools          (neu)
   Security/                     API-Key- und JWT-Anmeldung, Rollen      (neu)
+  Demo/                         Landingpage, Zugang, Chat mit Claude    (neu, optional)
 tests/ODataAgentSample.Tests/   xUnit
 ```
 
