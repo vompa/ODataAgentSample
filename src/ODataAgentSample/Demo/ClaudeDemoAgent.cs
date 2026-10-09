@@ -97,14 +97,15 @@ public sealed partial class ClaudeDemoAgent : IDemoAgent, IDisposable
         };
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Demo-Lauf: {Input} Eingabe-, {Output} Ausgabe-Tokens, {Cached} aus dem Cache")]
-    private partial void LogUsage(long input, long output, long cached);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Demo-Lauf: {Calls} Modellaufrufe, {Input} Eingabe-, {Output} Ausgabe-Tokens, {Cached} aus dem Cache")]
+    private partial void LogUsage(long calls, long input, long output, long cached);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Demo-Lauf fehlgeschlagen")]
     private partial void LogFailure(Exception exception);
 
     private async Task ProduceAsync(string prompt, string sessionId, Uri mcpUrl, ChannelWriter<DemoEvent> output, CancellationToken ct)
     {
+        long inputTokens = 0, outputTokens = 0, cacheReadTokens = 0, modelCalls = 0;
         try
         {
             await using var toolbox = await _toolboxes.ConnectAsync(mcpUrl, _options.ApiKey, ct);
@@ -118,11 +119,11 @@ public sealed partial class ClaudeDemoAgent : IDemoAgent, IDisposable
             // Anthropic bekommt nur einen Hash der Sitzung, damit Missbrauch zurueckverfolgbar ist, ohne Personendaten.
             var userHash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(sessionId)))[..32];
             var messages = new List<MessageParam> { new() { Role = Role.User, Content = prompt } };
-            long inputTokens = 0, outputTokens = 0, cacheReadTokens = 0;
 
             for (var round = 1; round <= _options.MaxToolRounds; round++)
             {
                 var response = await _client.Messages.Create(BuildParameters(_options, tools, messages, userHash), ct);
+                modelCalls++;
                 inputTokens += response.Usage.InputTokens;
                 outputTokens += response.Usage.OutputTokens;
                 cacheReadTokens += response.Usage.CacheReadInputTokens ?? 0;
@@ -176,7 +177,6 @@ public sealed partial class ClaudeDemoAgent : IDemoAgent, IDisposable
             }
 
             await output.WriteAsync(new DemoEvent(DemoEvent.Error, Message: "Abgebrochen: Die Anfrage brauchte zu viele Tool-Runden."), ct);
-            LogUsage(inputTokens, outputTokens, cacheReadTokens);
         }
         catch (OperationCanceledException)
         {
@@ -191,6 +191,9 @@ public sealed partial class ClaudeDemoAgent : IDemoAgent, IDisposable
         }
         finally
         {
+            // Bei jeder Frage, nicht nur bei Abbruechen: Grundlage, um die Kosten pro Frage zu messen. Ohne Inhalt der Frage.
+            if (modelCalls > 0)
+                LogUsage(modelCalls, inputTokens, outputTokens, cacheReadTokens);
             output.TryComplete();
         }
     }
