@@ -50,6 +50,10 @@ flowchart LR
 
 *Echte Aufrufe gegen den lokal laufenden Server (Ausgabe gekürzt). Grün zeigt erwartetes Verhalten, auch bei abgewiesenen Anfragen.*
 
+![Ein KI-Agent nutzt die MCP-Tools: Abfrage mit Fehlerkorrektur, abgewiesener Schreibversuch mit Reader-Key](docs/img/agent-demo.gif)
+
+*Zwei echte Läufe von Claude Code (`claude -p`) gegen den lokalen Server mit dem Reader-Key. Das GIF ist aus dem aufgezeichneten Transkript gerendert, keine Bildschirmaufnahme; Tool-Ergebnisse sind zusammengefasst. Im ersten Lauf lernt der Agent aus der Fehlermeldung von `get_country` und sucht stattdessen; im zweiten wird die Änderung ohne `writer`-Rolle abgewiesen, die Daten bleiben unverändert.*
+
 ## Was wurde gegenüber dem ODataSample geändert – und warum
 
 | Thema | ODataSample (Vorlage) | ODataAgentSample | Begründung |
