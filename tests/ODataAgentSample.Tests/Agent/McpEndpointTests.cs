@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using ODataAgentSample.Tests.Support;
@@ -109,6 +110,48 @@ public sealed class McpEndpointTests(AppFactory factory) : IClassFixture<AppFact
         Assert.NotEqual(true, result.IsError);
         Assert.Contains("Monaco", TextOf(result), StringComparison.Ordinal);
     }
+
+    [Fact]
+    public async Task Writer_updating_an_unknown_country_gets_a_tool_error_with_guidance()
+    {
+        await using var client = await ConnectAsync(AppFactory.WriterKey);
+
+        var result = await client.CallToolAsync("update_country", new Dictionary<string, object?>
+        {
+            ["code"] = "Atlantis",
+            ["displayNameGer"] = "Atlantis",
+        });
+        var check = await client.CallToolAsync("get_country", new Dictionary<string, object?> { ["code"] = "Atlantis" });
+
+        Assert.True(result.IsError);
+        var text = TextOf(result);
+        Assert.Contains("Atlantis", text, StringComparison.Ordinal);
+        Assert.Contains("ISO2", text, StringComparison.Ordinal);
+        Assert.Contains("ISO3", text, StringComparison.Ordinal);
+        Assert.True(check.IsError);
+    }
+
+    [Fact]
+    public async Task Reader_lists_the_six_world_regions_as_typed_data()
+    {
+        await using var client = await ConnectAsync(AppFactory.ReaderKey);
+
+        var result = await client.CallToolAsync("list_regions");
+        var regions = JsonSerializer.Deserialize<List<WorldRegionDto>>(TextOf(result), JsonSerializerOptions.Web);
+
+        Assert.NotEqual(true, result.IsError);
+        Assert.NotNull(regions);
+        Assert.Equal(["AF", "AS", "EU", "NA", "OC", "SA"], regions.Select(r => r.Iso).Order());
+        Assert.All(regions, r =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(r.Name));
+            Assert.True(r.Countries > 0);
+            Assert.InRange(r.EuMembers, 0, r.Countries);
+        });
+        Assert.Equal(264, regions.Sum(r => r.Countries));
+    }
+
+    private sealed record WorldRegionDto(string Iso, string Name, int Countries, int EuMembers);
 
     [Fact]
     public async Task Wrong_key_is_rejected_when_connecting() =>
