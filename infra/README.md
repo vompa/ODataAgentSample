@@ -97,6 +97,9 @@ az group delete --name <rg>
 - Die erste Einrichtung der Container-Apps-Umgebung dauerte rund 15 Minuten, spätere Läufe unter 3 Minuten. Das
   OIDC-Token von `azure/login` gilt nur wenige Minuten, deshalb meldet sich der Workflow vor dem Registry-Login
   erneut an.
+- Die Swagger-Oberfläche (`/swagger`) ist in Azure über `OpenApi__Enabled=true` eingeschaltet. Sie und das
+  OpenAPI-Dokument sind öffentlich lesbar, beschreiben aber nur die Schnittstelle. Daten und `/mcp` verlangen weiterhin
+  den API-Key (in der Oberfläche über *Authorize*). Wer das nicht will, entfernt die Zeile im Bicep.
 - Hinter dem TLS-Proxy der Container Apps kommen Schema und Client-IP nur als `X-Forwarded-*` an. Die App wertet sie
   aus, wenn `ForwardedHeaders__Enabled=true` gesetzt ist (im Bicep so eingestellt). Standardmäßig ist das aus: Wer die
   App direkt erreicht, könnte die Header sonst fälschen und das IP-basierte Rate Limit umgehen. Ohne diese Einstellung

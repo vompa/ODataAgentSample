@@ -143,7 +143,27 @@ if (forwardedHeaders)
 
 app.UseAuthentication();
 app.UseRateLimiter();   // nach Authentication (kennt den Client), vor Authorization (bremst auch fehlgeschlagene Versuche)
+// Swagger-Oberflaeche fuer die OData-Schnittstelle. Standard: aus. Die Seite und das OpenAPI-Dokument beschreiben nur die
+// Schnittstelle und sind anonym erreichbar; Daten liefert weiterhin nur ein Aufruf mit API-Key (Schaltflaeche "Authorize").
+// Die Middleware muss VOR UseAuthorization liegen: Die Fallback-Policy verlangt sonst auch fuer die Oberflaeche eine Anmeldung.
+// Sie liegt hinter dem Rate Limit, damit auch die Oberflaeche gebremst wird.
+var openApi = builder.Configuration.GetValue<bool>("OpenApi:Enabled");
+if (openApi)
+{
+    app.UseSwaggerUI(o =>
+    {
+        o.RoutePrefix = "swagger";
+        o.DocumentTitle = "ODataAgentSample";
+        o.SwaggerEndpoint(ODataOpenApi.DocumentPath, "OData v4");
+    });
+}
+
 app.UseAuthorization();
+
+if (openApi)
+{
+    app.MapGet(ODataOpenApi.DocumentPath, () => Results.Content(ODataOpenApi.GetJson(), "application/json")).AllowAnonymous();
+}
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
 app.MapControllers();

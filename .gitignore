@@ -8,3 +8,6 @@ TestResults/
 *.db
 *.db-shm
 *.db-wal
+
+# Absturzprotokolle von Git Bash (Windows)
+*.stackdump

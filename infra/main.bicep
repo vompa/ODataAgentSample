@@ -135,6 +135,8 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = if (deployApp) {
               { name: 'RateLimit__RequestsPerMinute', value: string(requestsPerMinute) }
               // Der Ingress ist in Container Apps der einzige Zugangsweg: Schema und Client-IP aus X-Forwarded-* uebernehmen
               { name: 'ForwardedHeaders__Enabled', value: 'true' }
+              // Swagger-Oberflaeche und OpenAPI-Dokument (beschreiben nur die Schnittstelle, Daten bleiben hinter dem API-Key)
+              { name: 'OpenApi__Enabled', value: 'true' }
               { name: 'Authentication__ApiKeys__0__Name', value: 'reader' }
               { name: 'Authentication__ApiKeys__0__KeySha256', secretRef: 'reader-key-sha256' }
               { name: 'Authentication__ApiKeys__0__Role', value: 'reader' }

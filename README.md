@@ -113,6 +113,19 @@ curl -H "X-Api-Key: dev-reader-key" \
   "http://localhost:5240/odata/v1/Countries?\$top=1&\$select=ISO2,DisplayName"
 ```
 
+### Swagger-Oberfläche (optional)
+
+Mit `OpenApi:Enabled=true` (im Development-Profil und im Azure-Deployment gesetzt, sonst **aus**) gibt es unter
+`/swagger` eine Swagger-Oberfläche. Das OpenAPI-Dokument unter `/openapi/odata.json` wird zur Laufzeit aus dem
+EDM-Modell erzeugt ([Microsoft.OpenApi.OData](https://github.com/microsoft/OpenAPI.NET.OData)) und beschreibt nur die
+Operationen, die die API wirklich anbietet: lesen auf allen drei Mengen, `POST`, `PATCH` und `DELETE` nur auf `Countries`.
+
+- Oberfläche und Dokument sind **ohne Key** erreichbar, sie beschreiben nur die Schnittstelle und enthalten keine Daten.
+- Jeder Aufruf aus der Oberfläche braucht den API-Key: über **Authorize** den Header `X-Api-Key` setzen
+  (lokal zum Beispiel `dev-reader-key`). Ohne Key liefern die Datenendpunkte weiterhin 401.
+- Das Dokument verwendet eine relative Server-URL (`/odata/v1`) und hängt damit nicht vom Host-Header ab.
+- Hinweis: Swagger deckt nur OData ab. Der MCP-Endpunkt `/mcp` ist kein REST und steht nicht darin.
+
 ### An einen Agenten anbinden
 
 Mit der Reader-Rolle kann der Agent Daten lesen:
@@ -287,6 +300,8 @@ dotnet test
 | `McpEndpointTests` | echter MCP-Client gegen den Server im Speicher: Tool-Discovery, Suche, Fehlertexte, Rollen am Tool |
 | `ApiKeyHasherTests` | SHA-256-Testvektor, Hash-Validierung |
 | `JwtAuthenticationTests` | Scopes und App-Rollen, 403 ohne passenden Scope, 401 bei abgelaufenem, noch nicht gültigem, falsch signiertem, fremdem (Zielgruppe, Aussteller), unsigniertem und anders signiertem (HS512) Token; API-Key daneben; MCP mit JWT |
+| `OpenApiTests` | Swagger standardmäßig aus; eingeschaltet anonym erreichbar, Dokument mit API-Key-Schema, nur tatsächlich unterstützte Operationen, unabhängig vom Host-Header, Daten und `/mcp` weiterhin geschützt |
+| `ForwardedHeadersTests` | `X-Forwarded-Proto` nur mit aktivierter Einstellung ausgewertet (https-Links hinter dem Proxy) |
 | `JwtOptionsTests` | Konfigurationsprüfung (Pflichtwerte, Schlüssellänge, HTTPS-Authority), Start bricht bei kaputter Konfiguration ab, Claim-zu-Rolle-Abbildung, Auswahl API-Key/JWT, Token-Aussteller |
 
 Die JWT-Tests prüfen die Validierung mit lokal signierten Tokens. Gegen einen echten Identity Provider (zum Beispiel einen
@@ -302,7 +317,7 @@ data/                           Seed-Daten aus dem ODataSample (als Ressourcen e
 src/ODataAgentSample/
   Domain/                       Entitäten (WorldRegion, CountryRegion, Country)
   Infrastructure/Db/            DbContext, Seeding, Optionen
-  OData/                        EDM-Modell, Controller, $search-Binder  (portiert)
+  OData/                        EDM-Modell, Controller, $search-Binder  (portiert), OpenAPI-Dokument (neu)
   Agent/                        Service, Modelle und MCP-Tools          (neu)
   Security/                     API-Key- und JWT-Anmeldung, Rollen      (neu)
 tests/ODataAgentSample.Tests/   xUnit
