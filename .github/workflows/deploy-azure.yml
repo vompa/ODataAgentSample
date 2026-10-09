@@ -1,0 +1,97 @@
+name: Deploy to Azure
+
+# Nur manuell ausloesbar: Das Deployment kostet Geld und soll nicht bei jedem Push laufen.
+on:
+  workflow_dispatch:
+
+# Anmeldung ueber OpenID Connect (Federated Credential), es gibt keine gespeicherten Azure-Passwoerter.
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-azure
+  cancel-in-progress: false
+
+env:
+  IMAGE_NAME: odata-agent-sample
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Optional: In den Repository-Einstellungen eine Umgebung "azure" mit Genehmigung anlegen.
+    environment: azure
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bei Azure anmelden (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Infrastruktur anlegen (Registry, Identitaet, Umgebung)
+        id: infra
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+        run: |
+          az deployment group create \
+            --resource-group "$RESOURCE_GROUP" \
+            --template-file infra/main.bicep \
+            --parameters deployApp=false \
+            --query properties.outputs --output json > outputs.json
+          echo "registry=$(jq -r .registryName.value outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "login_server=$(jq -r .registryLoginServer.value outputs.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Image bauen und in die Registry schieben
+        env:
+          REGISTRY: ${{ steps.infra.outputs.registry }}
+          LOGIN_SERVER: ${{ steps.infra.outputs.login_server }}
+        run: |
+          az acr login --name "$REGISTRY"
+          docker build -t "$LOGIN_SERVER/$IMAGE_NAME:$GITHUB_SHA" .
+          docker push "$LOGIN_SERVER/$IMAGE_NAME:$GITHUB_SHA"
+
+      - name: Container App ausrollen
+        id: app
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          LOGIN_SERVER: ${{ steps.infra.outputs.login_server }}
+          READER_KEY_SHA256: ${{ secrets.READER_KEY_SHA256 }}
+          WRITER_KEY_SHA256: ${{ secrets.WRITER_KEY_SHA256 }}
+        run: |
+          az deployment group create \
+            --resource-group "$RESOURCE_GROUP" \
+            --template-file infra/main.bicep \
+            --parameters deployApp=true \
+                         image="$LOGIN_SERVER/$IMAGE_NAME:$GITHUB_SHA" \
+                         readerKeySha256="$READER_KEY_SHA256" \
+                         writerKeySha256="$WRITER_KEY_SHA256" \
+            --query properties.outputs --output json > outputs.json
+          echo "fqdn=$(jq -r .appFqdn.value outputs.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke-Test
+        env:
+          FQDN: ${{ steps.app.outputs.fqdn }}
+          SMOKE_READER_KEY: ${{ secrets.SMOKE_READER_KEY }}
+        run: |
+          base="https://$FQDN"
+          # Scale-to-zero: Die erste Anfrage weckt die App, deshalb mehrfach versuchen.
+          for i in $(seq 1 18); do
+            if curl -fsS "$base/health" > /dev/null; then break; fi
+            echo "Warte auf die App ($i/18) ..."; sleep 10
+          done
+          curl -fsS "$base/health"; echo
+
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$base/odata/v1/Countries?\$top=1")
+          [ "$code" = "401" ] || { echo "Erwartet 401 ohne Key, bekommen: $code"; exit 1; }
+
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' "$base/mcp")
+          [ "$code" = "401" ] || { echo "MCP ohne Key: erwartet 401, bekommen: $code"; exit 1; }
+
+          if [ -n "$SMOKE_READER_KEY" ]; then
+            code=$(curl -s -o /dev/null -w '%{http_code}' -H "X-Api-Key: $SMOKE_READER_KEY" "$base/odata/v1/Countries?\$top=1")
+            [ "$code" = "200" ] || { echo "Erwartet 200 mit Reader-Key, bekommen: $code"; exit 1; }
+          fi
+          echo "Smoke-Test bestanden: https://$FQDN"

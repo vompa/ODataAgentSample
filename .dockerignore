@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+.git/
+.github/
+.tours/
+.vs/
+.idea/
+docs/
+tests/
+infra/
+*.db
+*.db-shm
+*.db-wal
+CLAUDE.md
+Dockerfile
+.dockerignore
