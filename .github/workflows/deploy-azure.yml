@@ -44,6 +44,15 @@ jobs:
           echo "registry=$(jq -r .registryName.value outputs.json)" >> "$GITHUB_OUTPUT"
           echo "login_server=$(jq -r .registryLoginServer.value outputs.json)" >> "$GITHUB_OUTPUT"
 
+      # Das OIDC-Token gilt nur wenige Minuten. Die erste Einrichtung der Container-Apps-Umgebung kann deutlich laenger
+      # dauern, deshalb vor dem Registry-Login erneut anmelden.
+      - name: Erneut bei Azure anmelden (OIDC-Token ist kurzlebig)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
       - name: Image bauen und in die Registry schieben
         env:
           REGISTRY: ${{ steps.infra.outputs.registry }}
