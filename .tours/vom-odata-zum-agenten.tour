@@ -24,31 +24,31 @@
     {
       "title": "Startpunkt: Program.cs – Konfiguration",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 25,
-      "description": "Die Konfiguration wird beim Start validiert (`ValidateOnStart`). Ohne gültigen API-Key startet der Server nicht: fail closed statt versehentlich offen."
+      "line": 58,
+      "description": "Die Konfiguration wird beim Start validiert (`ValidateOnStart`). Ohne eine Anmeldeart (weder API-Key noch JWT) startet der Server nicht: fail closed statt versehentlich offen. Ist der Abschnitt `Authentication:Jwt` gesetzt, muss er vollständig und gültig sein, sonst bricht der Start mit einer Klartext-Meldung ab."
     },
     {
       "title": "Secure by default",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 37,
-      "description": "Die Fallback-Policy verlangt Anmeldung für **jeden** Endpunkt. Wer einen neuen Endpunkt vergisst abzusichern, hat ihn trotzdem geschützt. Nur `/health` ist ausdrücklich anonym.\n\nDie Policy `Writer` schützt alle ändernden Operationen."
+      "line": 81,
+      "description": "Die Fallback-Policy verlangt für **jeden** Endpunkt eine Anmeldung **und** mindestens die Rolle `reader`. Wer einen neuen Endpunkt vergisst abzusichern, hat ihn trotzdem geschützt. Ein gültiges Token ohne passenden Scope ist angemeldet, aber nicht berechtigt: 403. Nur `/health` ist ausdrücklich anonym.\n\nDie Policy `Writer` schützt alle ändernden Operationen."
     },
     {
       "title": "Rate Limiting",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 42,
+      "line": 86,
       "description": "Begrenzung pro Client (oder pro IP, solange niemand angemeldet ist). Das bremst Key-Raten und Agenten, die in eine Endlosschleife geraten."
     },
     {
       "title": "Zwei Welten, ein Host",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 57,
+      "line": 101,
       "description": "Hier wird MCP registriert (`AddMcpServer` + `WithTools<CountryTools>`), direkt darunter der klassische OData-Service. Beide nutzen dasselbe EF-Core-Modell und dieselbe Authentifizierung."
     },
     {
       "title": "Reihenfolge der Middleware",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 78,
+      "line": 122,
       "description": "Authentication → RateLimiter → Authorization. Das Rate Limit steht nach der Authentifizierung (es kennt den Client), aber vor der Autorisierung, damit auch fehlgeschlagene Versuche gezählt werden."
     },
     {
@@ -68,6 +68,30 @@
       "file": "src/ODataAgentSample/Security/ApiKeyAuthenticationHandler.cs",
       "line": 52,
       "description": "Name und Rolle des Keys landen als Claims im Principal. Davon leben die Policy `Writer`, die Rollenprüfung im Tool und das Audit-Log."
+    },
+    {
+      "file": "src/ODataAgentSample/Security/JwtOptions.cs",
+      "line": 46,
+      "title": "OAuth2/JWT: ganz oder gar nicht",
+      "description": "JWT ist optional. Ist der Abschnitt `Authentication:Jwt` leer, bleibt es bei API-Keys. Sobald auch nur ein Wert gesetzt ist, muss alles stimmen: `Audience` ist Pflicht, genau eines von `Authority` (Produktion, OIDC-Discovery, z. B. Entra ID) oder `SigningKey` (nur lokale Demo und Tests), Schlüssel mindestens 32 Bytes, `Authority` nur über HTTPS. Eine halbe Konfiguration lässt den Start scheitern, statt still eine Lücke zu lassen."
+    },
+    {
+      "file": "src/ODataAgentSample/Security/JwtAuthentication.cs",
+      "line": 16,
+      "title": "Ein Host, zwei Anmeldearten",
+      "description": "Ein Policy-Schema entscheidet pro Anfrage: Ein `Authorization: Bearer`-Wert in JWT-Form (drei Teile) geht an JwtBearer, alles andere (auch ein API-Key als Bearer) an den Key-Handler. Auch ein Token mit leerer Signatur (`alg: none`) gilt als JWT-förmig und wird dadurch von JwtBearer abgelehnt, statt als API-Key durchzurutschen.\n\nKonsequenz: API-Keys dürfen nicht wie ein JWT aussehen."
+    },
+    {
+      "file": "src/ODataAgentSample/Security/JwtAuthentication.cs",
+      "line": 49,
+      "title": "Token-Prüfung ohne Abkürzungen",
+      "description": "Aussteller, Zielgruppe und Ablauf werden immer geprüft, die Toleranz ist auf 30 s verkürzt (Standard: 5 min). Unsignierte Tokens sind verboten. Beim lokalen Schlüssel ist zusätzlich nur HS256 erlaubt: Das verhindert die klassische Algorithmus-Verwechslung. Die Tests belegen das mit einem HS512-Token und mit einer gezielten Sabotage dieser Zeile, bei der genau dieser Test rot wird."
+    },
+    {
+      "file": "src/ODataAgentSample/Security/JwtAuthentication.cs",
+      "line": 82,
+      "title": "Scopes werden zu Rollen",
+      "description": "Scopes (`scp`/`scope`) und App-Rollen (`roles`) aus dem Token werden zu den vorhandenen Rollen `reader` und `writer`. Dadurch greifen OData-Policy und MCP-Tool unverändert, egal ob ein API-Key oder ein Token kommt. Scope-Namen müssen exakt passen (`countries.writer` gewährt nichts). Ein Token ohne passenden Scope bekommt keine Rolle und damit 403.\n\nEntra ID liefert Delegated Permissions in `scp` und App-Rollen in `roles`."
     },
     {
       "title": "OData: Schreibzugriff nur für writer",
@@ -134,6 +158,12 @@
       "file": "tests/ODataAgentSample.Tests/Agent/McpEndpointTests.cs",
       "line": 9,
       "description": "Ein echter MCP-Client spricht gegen den Server im Speicher: Tool-Discovery, Suche, Fehlertexte und – am wichtigsten – dass ein `reader`-Key nichts ändern kann.\n\nWeitere Bausteine: `AccessControlTests` (401/403), `CountryQueryServiceTests` (Logik, Datenfunde), `ODataEndpointTests` (der portierte Service)."
+    },
+    {
+      "file": "tests/ODataAgentSample.Tests/Security/JwtAuthenticationTests.cs",
+      "line": 14,
+      "title": "JWT-Tests mit gezielt kaputten Tokens",
+      "description": "Neben gültigen Tokens werden acht Arten von kaputten Tokens gebaut: abgelaufen, noch nicht gültig, falscher Schlüssel, falsche Zielgruppe, falscher Aussteller, anderer Algorithmus, unsigniert und Müll. Alle müssen 401 ergeben. Dazu kommen Scope- und Rollen-Fälle, der API-Key neben JWT und MCP mit Token.\n\nWichtig: Die Tests prüfen die Validierung mit lokal signierten Tokens. Der Weg über `Authority` mit OIDC-Discovery ist nicht gegen einen echten Identity Provider getestet."
     }
   ]
 }

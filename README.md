@@ -56,7 +56,7 @@ flowchart LR
 |---|---|---|---|
 | Zugriff für Agenten | – | **MCP-Endpunkt `/mcp`** mit 4 Tools | Agenten brauchen entdeckbare Tools mit Beschreibung, keine freie Query-Sprache |
 | Abfrageform | freies `$filter/$expand/$apply` | **wenige typisierte Operationen** (`search_countries`, …) | Kleine, validierbare Oberfläche; Fehler lassen sich dem Modell erklären; weniger Token |
-| Authentifizierung | keine | **API-Key**, nur Hash gespeichert, Vergleich in konstanter Zeit | Ein Agent ist ein nicht vertrauenswürdiger Client (Prompt Injection) |
+| Authentifizierung | keine | **API-Key** (nur Hash gespeichert, konstante Vergleichszeit) oder **OAuth2/JWT** (Scopes und Rollen aus dem Token) | Ein Agent ist ein nicht vertrauenswürdiger Client (Prompt Injection) |
 | Autorisierung | keine – jeder konnte `DELETE` | **Rollen `reader` / `writer`**; Fallback-Policy „alles geschützt“ | Least Privilege: Agenten bekommen standardmäßig nur Lesezugriff |
 | Schreibzugriff | volles CRUD auf allen Entitäten | OData: nur `Countries` änderbar, nur `writer`; MCP: **ein** Änderungs-Tool | Stammdaten-Regionen sind jetzt schreibgeschützt; Änderungen sind bewusst selten |
 | Ergebnisgröße | `Countries` unbegrenzt, `/allelaender` lud alles | `PageSize=100`, `MaxTop=250`, `MaxExpansionDepth=2`; Tools: `limit ≤ 100` | Schutz von Server und Kontextfenster des Agenten |
@@ -176,7 +176,49 @@ Secret-Store oder sichere Umgebungsvariablen.
 "Authentication": { "ApiKeys": [ { "Name": "reporting-agent", "KeySha256": "<hash>", "Role": "reader" } ] }
 ```
 
-Ohne konfigurierten Key startet der Server nicht (fail closed).
+Ohne konfigurierte Anmeldeart (weder API-Key noch JWT) startet der Server nicht (fail closed).
+
+### OAuth2 / JWT (optional)
+
+Neben API-Keys akzeptiert der Server **Bearer-Tokens (JWT)** eines OAuth2/OIDC-Anbieters wie Microsoft Entra ID.
+Ein `Authorization: Bearer`-Wert in JWT-Form (drei Teile) geht an die Token-Prüfung, alles andere (zum Beispiel ein
+API-Key als Bearer) wie bisher an den Key-Handler. API-Keys dürfen daher nicht wie ein JWT aussehen (zwei Punkte).
+
+Produktion: ein Identity Provider mit OIDC-Discovery, im Server liegt kein Geheimnis.
+
+```jsonc
+"Authentication": {
+  "Jwt": {
+    "Authority": "https://login.microsoftonline.com/<tenant-id>/v2.0",
+    "Audience": "api://odata-agent-sample"
+  }
+}
+```
+
+Geprüft werden Signatur (Schlüssel aus der Discovery), Aussteller, Zielgruppe (`aud`) und Gültigkeit (`exp`/`nbf`, 30 s
+Toleranz). Unsignierte Tokens werden abgelehnt. Die Berechtigungen kommen aus dem Token:
+
+| Im Token | Wirkung |
+|---|---|
+| Scope `countries.read` (Claim `scp` oder `scope`) oder App-Rolle `reader` | Lesen (OData und MCP) |
+| Scope `countries.write` oder App-Rolle `writer` | Lesen und Schreiben (`POST`/`PATCH`/`DELETE`, `update_country`) |
+| keines von beiden | angemeldet, aber nicht berechtigt: **403** |
+
+Ungültige, abgelaufene, falsch signierte, unsignierte oder für eine andere API ausgestellte Tokens ergeben **401**.
+Die Scope-Namen sind über `ReaderScope` und `WriterScope` anpassbar.
+
+**Lokale Demo ohne Identity Provider:** Im Development-Profil ist ein symmetrischer Schlüssel konfiguriert
+(`Authentication:Jwt:SigningKey`, nur dort). Damit stellt ein Hilfsbefehl lokale Tokens aus:
+
+```bash
+TOKEN=$(dotnet run --project src/ODataAgentSample -- issue-token alice countries.write | tail -1)
+curl -H "Authorization: Bearer $TOKEN" "http://localhost:5240/odata/v1/Countries?\$top=3"
+claude mcp add --transport http laender-jwt http://localhost:5240/mcp --header "Authorization: Bearer $TOKEN"
+```
+
+`Authority` und `SigningKey` schließen sich gegenseitig aus, ein zu kurzer Schlüssel oder fehlende Pflichtwerte
+verhindern den Start. Der Demo-Schlüssel gehört nicht in eine produktive Konfiguration; ohne Development-Umgebung
+stellt der Hilfsbefehl keine Tokens aus.
 
 ## Die MCP-Tools
 
@@ -194,9 +236,9 @@ gesondert behandeln (z. B. Rückfrage an den Benutzer) können.
 
 | Schicht | Maßnahme |
 |---|---|
-| Authentifizierung | API-Key (`X-Api-Key` / Bearer), nur SHA-256 gespeichert, konstante Vergleichszeit, kein früher Abbruch |
+| Authentifizierung | API-Key (`X-Api-Key` / Bearer), nur SHA-256 gespeichert, konstante Vergleichszeit, kein früher Abbruch; **oder JWT**: Signatur, Aussteller, Zielgruppe und Ablauf geprüft, unsignierte Tokens und fremde Algorithmen abgelehnt |
 | Secure by default | Fallback-Policy verlangt Anmeldung für **jeden** Endpunkt; nur `/health` ist anonym |
-| Least Privilege | Rollen `reader`/`writer`; OData-Schreiboperationen per Policy, `update_country` zusätzlich im Tool geprüft |
+| Least Privilege | Rollen `reader`/`writer` (aus API-Key oder aus Scopes/Rollen des Tokens); jeder Endpunkt verlangt mindestens `reader` (Token ohne passenden Scope: 403); OData-Schreiboperationen per Policy, `update_country` zusätzlich im Tool geprüft |
 | Eingaben | Freitext wird als `LIKE`-Muster neutralisiert (`%`, `_`, `\`); Regionen/Codes gegen die Datenbank geprüft; Längenlimits |
 | Ressourcenschutz | Seitengrößen, `MaxTop`, `MaxExpansionDepth`, Tool-Limit, Rate Limit |
 | Nachvollziehbarkeit | Audit-Log je Tool-Aufruf; abgelehnte Keys werden mit IP geloggt |
@@ -232,6 +274,11 @@ dotnet test
 | `CountryQueryServiceTests` | Suche, Paging, Limit-Kappung, LIKE-Injection, Regionen-Alias, Datenfunde, Update-Regeln |
 | `McpEndpointTests` | echter MCP-Client gegen den Server im Speicher: Tool-Discovery, Suche, Fehlertexte, Rollen am Tool |
 | `ApiKeyHasherTests` | SHA-256-Testvektor, Hash-Validierung |
+| `JwtAuthenticationTests` | Scopes und App-Rollen, 403 ohne passenden Scope, 401 bei abgelaufenem, noch nicht gültigem, falsch signiertem, fremdem (Zielgruppe, Aussteller), unsigniertem und anders signiertem (HS512) Token; API-Key daneben; MCP mit JWT |
+| `JwtOptionsTests` | Konfigurationsprüfung (Pflichtwerte, Schlüssellänge, HTTPS-Authority), Start bricht bei kaputter Konfiguration ab, Claim-zu-Rolle-Abbildung, Auswahl API-Key/JWT, Token-Aussteller |
+
+Die JWT-Tests prüfen die Validierung mit lokal signierten Tokens. Gegen einen echten Identity Provider (zum Beispiel einen
+Entra-ID-Mandanten) ist der Weg über `Authority` mit OIDC-Discovery **nicht** getestet.
 
 Die CI baut mit `TreatWarningsAsErrors` und Analyzern (`AnalysisLevel=latest-recommended`) und prüft Pakete auf
 bekannte Schwachstellen.
@@ -245,15 +292,16 @@ src/ODataAgentSample/
   Infrastructure/Db/            DbContext, Seeding, Optionen
   OData/                        EDM-Modell, Controller, $search-Binder  (portiert)
   Agent/                        Service, Modelle und MCP-Tools          (neu)
-  Security/                     API-Key-Handler, Rollen, Hashing        (neu)
+  Security/                     API-Key- und JWT-Anmeldung, Rollen      (neu)
 tests/ODataAgentSample.Tests/   xUnit
 ```
 
 ## Grenzen und nächste Schritte
 
 - **Reseed bei jedem Start** ist für eine Demo gedacht. Für echte Daten: EF-Migrations und kein `EnsureDeleted`.
-- **Rollen pro Key, nicht pro Benutzer:** Für Mehrbenutzerbetrieb wäre OAuth 2.1/Entra ID mit Scopes der nächste
-  Schritt (`AddJwtBearer` statt Key-Schema; Policies bleiben gleich).
+- **OAuth2/JWT ist nur mit lokal signierten Tokens getestet,** nicht gegen einen echten Identity Provider. Offen sind
+  außerdem Token-Widerruf (Revocation), Scopes pro Tool und der Austausch von Tokens im Namen des Benutzers (On-Behalf-Of).
+  API-Keys bleiben eine Rolle pro Key; Rollen pro Benutzer gibt es nur über JWT.
 - **Tool-Sichtbarkeit:** `update_country` ist auch für `reader` in der Tool-Liste sichtbar und scheitert erst beim
   Aufruf. Eine rollenabhängige Tool-Liste wäre feiner.
 - **Rate-Limit-Zustand pro Instanz;** bei mehreren Instanzen braucht es einen gemeinsamen Speicher oder ein Gateway.
