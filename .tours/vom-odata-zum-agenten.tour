@@ -1,7 +1,7 @@
 {
   "$schema": "https://aka.ms/codetour-schema",
   "title": "Vom OData-Service zum KI-Agenten-Backend",
-  "description": "Rundgang durch den Umbau des ODataSample: gleiche Daten, aber mit MCP-Tools, Rollen und Limits für Agenten, dazu Swagger-Oberfläche und Deployment auf Azure.",
+  "description": "Rundgang durch den Umbau des ODataSample: gleiche Daten, aber mit MCP-Tools, Rollen und Limits für Agenten, dazu Swagger-Oberfläche, öffentliche Demo mit Claude und Deployment auf Azure.",
   "steps": [
     {
       "title": "Überblick",
@@ -24,42 +24,42 @@
     {
       "title": "Startpunkt: Program.cs – Konfiguration",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 59,
+      "line": 68,
       "description": "Die Konfiguration wird beim Start validiert (`ValidateOnStart`). Ohne eine Anmeldeart (weder API-Key noch JWT) startet der Server nicht: fail closed statt versehentlich offen. Ist der Abschnitt `Authentication:Jwt` gesetzt, muss er vollständig und gültig sein, sonst bricht der Start mit einer Klartext-Meldung ab."
     },
     {
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 72,
+      "line": 81,
       "title": "Hinter dem Proxy: Forwarded Headers",
       "description": "In Azure terminiert ein Proxy das TLS. Ohne Auswertung von `X-Forwarded-Proto` erzeugte OData Links mit `http://`, und das Rate Limit sah für alle anonymen Clients dieselbe IP.\n\nDie Auswertung ist **standardmäßig aus**: Wer die App direkt erreicht, könnte die Header fälschen und das IP-Limit umgehen. Eingeschaltet wird sie nur im Deployment (`ForwardedHeaders__Enabled=true`), wo der Proxy der einzige Zugangsweg ist. `ForwardLimit = 1` nimmt nur den Eintrag des direkten Proxys."
     },
     {
       "title": "Secure by default",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 98,
+      "line": 107,
       "description": "Die Fallback-Policy verlangt für **jeden** Endpunkt eine Anmeldung **und** mindestens die Rolle `reader`. Wer einen neuen Endpunkt vergisst abzusichern, hat ihn trotzdem geschützt. Ein gültiges Token ohne passenden Scope ist angemeldet, aber nicht berechtigt: 403. Nur `/health` ist ausdrücklich anonym.\n\nDie Policy `Writer` schützt alle ändernden Operationen."
     },
     {
       "title": "Rate Limiting",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 103,
+      "line": 112,
       "description": "Begrenzung pro Client (oder pro IP, solange niemand angemeldet ist). Das bremst Key-Raten und Agenten, die in eine Endlosschleife geraten. Hinter einem Proxy sieht die App für anonyme Anfragen sonst nur die IP des Proxys, siehe den nächsten Abschnitt zu den Forwarded Headers."
     },
     {
       "title": "Zwei Welten, ein Host",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 118,
+      "line": 127,
       "description": "Hier wird MCP registriert (`AddMcpServer` + `WithTools<CountryTools>`), direkt darunter der klassische OData-Service. Beide nutzen dasselbe EF-Core-Modell und dieselbe Authentifizierung."
     },
     {
       "title": "Reihenfolge der Middleware",
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 144,
+      "line": 153,
       "description": "ForwardedHeaders (nur wenn eingeschaltet) → Authentication → RateLimiter → Swagger-Oberfläche (nur wenn eingeschaltet) → Authorization.\n\nDas Rate Limit steht nach der Authentifizierung (es kennt den Client), aber vor der Autorisierung, damit auch fehlgeschlagene Versuche gezählt werden. Die Swagger-Middleware muss **vor** `UseAuthorization` liegen: Die Fallback-Policy verlangt sonst auch für die Oberfläche eine Anmeldung. Das hat ein Test gezeigt (401 statt 200)."
     },
     {
       "file": "src/ODataAgentSample/Program.cs",
-      "line": 150,
+      "line": 159,
       "title": "Swagger: beschreiben, nicht öffnen",
       "description": "Mit `OpenApi:Enabled` gibt es unter `/swagger` eine Oberfläche, das Dokument liegt unter `/openapi/odata.json`. Beides ist anonym lesbar, weil es nur die Schnittstelle beschreibt. Alle Aufrufe aus der Oberfläche brauchen weiterhin den API-Key (Schaltfläche *Authorize*), Daten und `/mcp` liefern ohne Key 401.\n\nStandard ist **aus**; eingeschaltet im Development-Profil und im Azure-Deployment."
     },
@@ -68,6 +68,54 @@
       "line": 69,
       "title": "Das Dokument darf nichts versprechen",
       "description": "Der Generator beschreibt alles, was das EDM-Modell theoretisch erlaubt, zum Beispiel `POST` auf `WorldRegions`. Die API liefert dort 405. Dieser Filter lässt nur zu, was wirklich geht: lesen überall, `POST`, `PATCH` und `DELETE` nur auf `Countries`. Ein Test hält das fest.\n\nGefunden hat das der praktische Versuch in der Oberfläche, nicht die Tests der ersten Fassung. Außerdem nutzt das Dokument eine relative Server-URL (`/odata/v1`) und hängt nicht vom Host-Header ab."
+    },
+    {
+      "file": "src/ODataAgentSample/Program.cs",
+      "line": 62,
+      "title": "Die Demo ist standardmäßig aus",
+      "description": "Landingpage, Zugang mit Code und Chat mit Claude gibt es nur mit `Demo:Enabled`. Ohne den Schalter existiert nichts davon: keine Seiten, keine Schnittstelle, kein Anthropic-Zugriff. Auch die Routen für die Seiten werden erst dann gemappt (`MapDemo`)."
+    },
+    {
+      "file": "src/ODataAgentSample/Demo/DemoOptions.cs",
+      "line": 43,
+      "title": "Alles oder nichts beim Start",
+      "description": "Eingeschaltet müssen Zugangscode-Hash, Cookie-Schlüssel, Reader-Key und Anthropic-Key gesetzt und lang genug sein, sonst startet die App nicht (fail closed). Das MCP-Ziel darf nur eine Loopback-Adresse sein: Die Demo kann nicht als Weiterleitung an fremde Server missbraucht werden."
+    },
+    {
+      "file": "src/ODataAgentSample/Demo/DemoToolPolicy.cs",
+      "line": 13,
+      "title": "Nur diese drei Tools",
+      "description": "Claude sieht ausschließlich `search_countries`, `get_country` und `list_regions`. `update_country` ist bewusst nicht dabei, und es gibt keine eingebauten Claude-Werkzeuge. Die Liste wird zweimal erzwungen: beim Zusammenbauen der Anfrage und beim Ausführen. Fordert das Modell ein anderes Tool an, erreicht der Aufruf den MCP-Server nie."
+    },
+    {
+      "file": "src/ODataAgentSample/Demo/ClaudeDemoAgent.cs",
+      "line": 62,
+      "title": "Was an Claude geht",
+      "description": "Modell, Token-Grenze und Tools kommen aus der Konfiguration, nie aus dem Browser. Der Browser liefert nur den Prompt-Text. Die Anfrage entsteht in einer eigenen Methode, damit ein Test genau prüfen kann, was gesendet wird. An Anthropic geht nur ein Hash der Sitzung als Benutzerkennung, keine Personendaten."
+    },
+    {
+      "file": "src/ODataAgentSample/Demo/ClaudeDemoAgent.cs",
+      "line": 123,
+      "title": "Die Tool-Schleife",
+      "description": "Claude fragt ein Tool an, die App führt es über den echten MCP-Client aus, das Ergebnis geht zurück, bis Claude antwortet oder die Rundengrenze erreicht ist. Jeder Schritt wird als Ereignis zur Seite gestreamt. Fehler des Servers gehen im Klartext an das Modell, damit es sich korrigieren kann (`get_country(\"Island\")` → Fehler → `IS`). Nach jeder Frage steht die Token-Nutzung im Log: Das waren in Messungen rund 0,03 Cent pro Frage."
+    },
+    {
+      "file": "src/ODataAgentSample/Demo/DemoQuota.cs",
+      "line": 29,
+      "title": "Kontingent mit gleitendem Fenster",
+      "description": "100 pro Stunde für alle, 15 pro Sitzung, 400 pro Tag. Die drei Fenster werden unter einer Sperre gemeinsam geprüft, parallele Anfragen können das Limit nicht überschreiten (ein Test lässt 2000 gleichzeitig laufen). Abgewiesene Anfragen verbrauchen nichts. Die Zähler liegen im Speicher: Ein Neustart setzt sie zurück, die harte Kostengrenze ist das Ausgabenlimit bei Anthropic."
+    },
+    {
+      "file": "src/ODataAgentSample/Demo/DemoEndpoints.cs",
+      "line": 40,
+      "title": "Zugang ohne Konten",
+      "description": "Ein gemeinsamer Zugangscode, nur als Hash gespeichert und in konstanter Zeit verglichen. Fehlversuche werden gebremst (5 pro Client und 10 Minuten). Danach gibt es ein signiertes Sitzungs-Cookie (`HttpOnly`, `SameSite=Strict`), das keine Personendaten enthält. Alle POST-Aufrufe verlangen zusätzlich den Header `X-Demo`; genau dessen Fehlen in den Seiten hat der Praxistest gefunden, ein Test hält es seitdem fest."
+    },
+    {
+      "file": "src/ODataAgentSample/Demo/DemoWebAssets.cs",
+      "line": 10,
+      "title": "Strenge Content-Security-Policy",
+      "description": "Die Seiten laden nur eigene Skripte und Stile: kein Inline-Code, keine fremden Server, keine Tracker, keine Einbettung in fremde Seiten. Ausgeliefert werden nur eingebettete Dateien aus einer festen Liste, nie ein Pfad aus der Anfrage. Ein Test prüft alle Seiten auf Inline-Code, denn der würde in der Praxis einfach nicht laufen."
     },
     {
       "title": "API-Key-Handler",
@@ -188,6 +236,12 @@
       "line": 12,
       "title": "Swagger-Tests: Standard aus, Daten bleiben zu",
       "description": "Ohne die Einstellung werden weder Oberfläche noch Dokument ausgeliefert. Eingeschaltet sind beide anonym erreichbar, das Dokument enthält das API-Key-Schema und nur unterstützte Operationen, und `/odata/v1/Countries`, `$metadata` und `/mcp` liefern weiterhin 401.\n\nDazu `ForwardedHeadersTests`: Die Header wirken nur mit eingeschalteter Einstellung. Ohne die Middleware wird der erste Test nachweislich rot."
+    },
+    {
+      "file": "tests/ODataAgentSample.Tests/Demo/DemoUnitTests.cs",
+      "line": 249,
+      "title": "Demo-Tests: jede Absicherung ist belegt",
+      "description": "89 Tests ohne echtes Modell (gefälschter Agent, gefälschte Zeit) und eine Probe mit gebrochenen Absicherungen: Allowlist, Zugangsprüfung, CSRF-Header, Sitzungsgrenze, Cookie-Signatur, Loopback-Ziel und Fehlertexte wurden einzeln abgeschaltet, jedes Mal wurde ein Test rot. Zwei erste Proben waren wertlos, weil `if (false)` den Build wegen unerreichbaren Codes brach und die Tests gegen die alte Binärdatei liefen. Genau davor schützt es, die Gegenprobe selbst zu prüfen.\n\nNicht getestet ist der echte Modellaufruf; den habe ich nach dem Deployment von Hand ausgeführt."
     },
     {
       "file": "Dockerfile",

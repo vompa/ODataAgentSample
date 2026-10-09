@@ -161,6 +161,10 @@ gesetzt sein, sonst startet die App nicht.
 
 **Grenzen, ehrlich:**
 
+- **Kosten (gemessen, zwei Fragen):** rund 700 bis 1.400 Eingabe- und 200 bis 300 Ausgabe-Tokens pro Frage, dazu Tokens
+  aus dem Prompt-Cache. Mit den Preisen von Claude Haiku 5.5 sind das etwa 0,03 Cent pro Frage, bei den vollen 400
+  Fragen am Tag im Extremfall rund 10 Cent. Das ist eine Hochrechnung aus zwei Stichproben, keine Abrechnung. Die
+  Token-Nutzung steht bei jeder Frage im Log (`Demo-Lauf: …`).
 - Das Kontingent liegt im Speicher. Ein Neustart (auch Scale-to-zero in Azure) setzt es zurück. Die harte
   Kostengrenze ist daher das **Ausgabenlimit in der Anthropic-Konsole**, das du vorher setzen solltest.
 - Ob eine Frage zum Thema passt, entscheidet am Ende das Modell. Der Systemtext begrenzt es auf die Länderdaten, ein
