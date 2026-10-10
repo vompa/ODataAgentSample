@@ -89,6 +89,24 @@ Nach dem Deployment sind unter der App-Adresse `/` (Landingpage) und `/demo` err
 Datenschutzseite gibt es bewusst nicht (nur Länderdaten, Lesezugriff für wenige Eingeladene). Zum Abschalten das Secret `DEMO_ANTHROPIC_API_KEY` leeren und neu ausrollen.
 Zu den Limits und Grenzen siehe den README-Abschnitt „Öffentliche Demo mit Chat“.
 
+### Optional: eigene Domain
+
+Mit einer eigenen Domain (hier als Beispiel `demo.example.com`) läuft die App unter einer kurzen Adresse, das TLS-Zertifikat stellt Azure kostenlos aus und erneuert es selbst.
+
+1. Beim DNS-Anbieter zwei Einträge anlegen: ein `CNAME` von `demo` auf die App-Adresse (`appFqdn`) und ein `TXT` `asuid.demo` mit der Verifizierungs-ID (`az containerapp show -n <name> -g <rg> --query properties.customDomainVerificationId`).
+2. Domain anhängen und Zertifikat ausstellen lassen (einmalig, kann bis zu 20 Minuten dauern):
+
+   ```bash
+   az containerapp hostname add  -n <name> -g <rg> --hostname demo.example.com
+   az containerapp hostname bind -n <name> -g <rg> --hostname demo.example.com \
+     --environment <name>-env --validation-method CNAME
+   ```
+
+   Die Ausgabe nennt das Zertifikat (`.../managedCertificates/<zertifikatsname>`).
+3. Im Repository unter *Settings → Secrets and variables → Actions → Variables* die Variablen `CUSTOM_DOMAIN` (`demo.example.com`) und `CUSTOM_DOMAIN_CERTIFICATE` (`<zertifikatsname>`) setzen. Ohne sie würde jedes Deployment die Domain wieder entfernen, mit ihnen bleibt sie erhalten.
+
+Sind die Variablen leer, läuft die App wie bisher nur unter der Azure-Adresse.
+
 ## Anbindung an einen Agenten
 
 ```bash

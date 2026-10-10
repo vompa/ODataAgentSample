@@ -1,8 +1,8 @@
 # ODataAgentSample
 [![CI](https://github.com/vompa/ODataAgentSample/actions/workflows/ci.yml/badge.svg)](https://github.com/vompa/ODataAgentSample/actions/workflows/ci.yml)
 
-> **▶ [Live-Demo ansehen](https://odata-agent.icyglacier-cb5fdc6a.germanywestcentral.azurecontainerapps.io/)** ·
-> [API-Doku (Swagger)](https://odata-agent.icyglacier-cb5fdc6a.germanywestcentral.azurecontainerapps.io/swagger) ·
+> **▶ [Live-Demo ansehen](https://demo.vompa.dev/)** ·
+> [API-Doku (Swagger)](https://demo.vompa.dev/swagger) ·
 > [Releases](https://github.com/vompa/ODataAgentSample/releases)
 >
 > Auf Azure Container Apps. Die Landingpage und die API-Doku sind frei einsehbar. Für den Chat mit Claude braucht es

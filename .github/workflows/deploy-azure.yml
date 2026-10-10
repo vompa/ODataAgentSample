@@ -74,6 +74,9 @@ jobs:
           DEMO_ACCESS_CODE_SHA256: ${{ secrets.DEMO_ACCESS_CODE_SHA256 }}
           DEMO_COOKIE_KEY: ${{ secrets.DEMO_COOKIE_KEY }}
           DEMO_API_KEY: ${{ secrets.DEMO_API_KEY }}
+          # Eigene Domain (optional): leer = nur die Azure-Adresse
+          CUSTOM_DOMAIN: ${{ vars.CUSTOM_DOMAIN }}
+          CUSTOM_DOMAIN_CERTIFICATE: ${{ vars.CUSTOM_DOMAIN_CERTIFICATE }}
         run: |
           az deployment group create \
             --resource-group "$RESOURCE_GROUP" \
@@ -86,6 +89,8 @@ jobs:
                          demoAccessCodeSha256="$DEMO_ACCESS_CODE_SHA256" \
                          demoCookieKey="$DEMO_COOKIE_KEY" \
                          demoApiKey="$DEMO_API_KEY" \
+                         customDomain="$CUSTOM_DOMAIN" \
+                         customDomainCertificate="$CUSTOM_DOMAIN_CERTIFICATE" \
             --query properties.outputs --output json > outputs.json
           echo "fqdn=$(jq -r .appFqdn.value outputs.json)" >> "$GITHUB_OUTPUT"
 

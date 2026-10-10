@@ -41,6 +41,12 @@ param minReplicas int = 1
 @description('Anfragen pro Minute und Client (Rate Limit der Anwendung).')
 param requestsPerMinute int = 60
 
+@description('Eigene Domain der App, z. B. demo.example.com. Leer = nur die Azure-Adresse. Voraussetzung: CNAME- und asuid-TXT-Eintrag im DNS sowie ein verwaltetes Zertifikat (siehe infra/README.md).')
+param customDomain string = ''
+
+@description('Name des verwalteten Zertifikats in der Container-Apps-Umgebung (az containerapp hostname bind legt es an). Pflicht, wenn customDomain gesetzt ist.')
+param customDomainCertificate string = ''
+
 @description('Anthropic-API-Key der Demo. Leer = Demo (Landingpage, Anmeldung, Chat) ist aus. Gesetzt = Demo ist an und braucht auch die drei Werte darunter.')
 @secure()
 param demoAnthropicApiKey string = ''
@@ -120,6 +126,11 @@ resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
+resource domainCertificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' existing = if (!empty(customDomain)) {
+  parent: environment
+  name: customDomainCertificate
+}
+
 resource app 'Microsoft.App/containerApps@2024-03-01' = if (deployApp) {
   name: name
   location: location
@@ -137,6 +148,13 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = if (deployApp) {
         targetPort: 8080
         transport: 'auto'
         allowInsecure: false
+        customDomains: empty(customDomain) ? [] : [
+          {
+            name: customDomain
+            certificateId: domainCertificate.id
+            bindingType: 'SniEnabled'
+          }
+        ]
       }
       registries: [
         {
