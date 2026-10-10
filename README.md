@@ -66,7 +66,7 @@ Derselbe Ablauf gegen die Instanz auf **Azure Container Apps**, ausgerollt per G
 
 ![Derselbe Agentenlauf gegen den MCP-Endpunkt auf Azure Container Apps](docs/img/agent-demo-azure.gif)
 
-*Wieder aus dem aufgezeichneten Transkript gerendert, keine Bildschirmaufnahme. Die Daten in Azure sind flüchtig (SQLite im Container, Scale-to-zero, eine Replik). Aufbau, Kosten, Einrichtung und Grenzen stehen in [infra/README.md](infra/README.md).*
+*Wieder aus dem aufgezeichneten Transkript gerendert, keine Bildschirmaufnahme. Die Daten in Azure sind flüchtig (SQLite im Container, eine Replik). Aufbau, Kosten, Einrichtung und Grenzen stehen in [infra/README.md](infra/README.md).*
 
 ## Was wurde gegenüber dem ODataSample geändert – und warum
 
@@ -171,7 +171,7 @@ gesetzt sein, sonst startet die App nicht.
   aus dem Prompt-Cache. Mit den Preisen von Claude Haiku 5.5 sind das etwa 0,03 Cent pro Frage, bei den vollen 400
   Fragen am Tag im Extremfall rund 10 Cent. Das ist eine Hochrechnung aus zwei Stichproben, keine Abrechnung. Die
   Token-Nutzung steht bei jeder Frage im Log (`Demo-Lauf: …`).
-- Das Kontingent liegt im Speicher. Ein Neustart (auch Scale-to-zero in Azure) setzt es zurück. Die harte
+- Das Kontingent liegt im Speicher. Ein Neustart (jedes Deployment, bei `minReplicas = 0` in Azure auch jeder Leerlauf) setzt es zurück. Die harte
   Kostengrenze ist daher das **Ausgabenlimit in der Anthropic-Konsole**, das du vorher setzen solltest.
 - Ob eine Frage zum Thema passt, entscheidet am Ende das Modell. Der Systemtext begrenzt es auf die Länderdaten, ein
   harter Schutz ist das nicht. Die Limits begrenzen den Schaden.

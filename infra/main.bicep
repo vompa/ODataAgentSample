@@ -33,6 +33,11 @@ param writerKeySha256 string = ''
 @maxValue(1)
 param maxReplicas int = 1
 
+@description('Mindestzahl Replikate. 1 = die App schläft nie (kein Kaltstart, Kontingent und Daten bleiben bis zum nächsten Deployment), kostet dauerhaft etwas. 0 = Scale-to-zero: im Leerlauf praktisch gratis, aber der erste Aufruf danach braucht einige Sekunden und setzt Kontingent und Daten zurück.')
+@minValue(0)
+@maxValue(1)
+param minReplicas int = 1
+
 @description('Anfragen pro Minute und Client (Rate Limit der Anwendung).')
 param requestsPerMinute int = 60
 
@@ -197,8 +202,9 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = if (deployApp) {
           ]
         }
       ]
-      // Scale-to-zero: ohne Anfragen entstehen praktisch keine Kosten. Die erste Anfrage danach dauert einige Sekunden.
-      scale: { minReplicas: 0, maxReplicas: maxReplicas }
+      // minReplicas 1: Die App schläft nicht ein. Mit 0 (Scale-to-zero) entstehen im Leerlauf praktisch keine Kosten,
+      // die erste Anfrage danach dauert aber einige Sekunden, und Kontingent und Daten werden zurückgesetzt.
+      scale: { minReplicas: minReplicas, maxReplicas: maxReplicas }
     }
   }
 }

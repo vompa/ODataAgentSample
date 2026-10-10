@@ -15,10 +15,12 @@ flowchart LR
 
 | Ressource | Zweck | Kosten (Richtwert) |
 |---|---|---|
-| Container App (Consumption, 0,25 vCPU, Scale-to-zero, max. 1 Replik) | die Anwendung | ohne Last praktisch 0, im Gratiskontingent |
+| Container App (Consumption, 0,25 vCPU, 0,5 GiB, genau 1 Replik, schläft nicht) | die Anwendung | dauerhaft reserviert: grob 3 bis 6 USD pro Monat (in der Azure-Preisübersicht prüfen), im Leerlauf günstiger abgerechnet als unter Last |
 | Container Registry (Basic) | Image | ca. 5 USD pro Monat |
 | Log Analytics (30 Tage, max. 0,5 GB pro Tag) | Logs der App | gering, durch Tageslimit gedeckelt |
 | Managed Identity mit Rolle *AcrPull* | Image holen ohne Passwort | 0 |
+
+**Schlafen:** Mit `minReplicas = 1` (Standard im Bicep) läuft immer eine Instanz, es gibt keinen Kaltstart, und Kontingent und Daten bleiben bis zum nächsten Deployment erhalten. Wer Kosten sparen will, setzt den Parameter `minReplicas` auf `0` (Scale-to-zero): Im Leerlauf kostet die App dann praktisch nichts, der erste Aufruf danach dauert aber einige Sekunden und setzt Kontingent und Daten zurück.
 
 Die Replikenzahl ist auf 1 festgelegt: Die SQLite-Datenbank liegt im Container und wird bei jedem Start aus den
 eingebetteten JSON-Dateien neu aufgebaut. Mehrere Repliken hätten jeweils eine eigene, voneinander abweichende Datenbank.
