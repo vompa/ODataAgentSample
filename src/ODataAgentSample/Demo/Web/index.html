@@ -11,109 +11,264 @@
   <script src="/assets/landing.js" defer></script>
 </head>
 <body>
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-logo" viewBox="0 0 40 40"><rect x="6" y="6" width="28" height="28" rx="9" transform="rotate(45 20 20)" fill="#f6d646"/><rect x="11.5" y="11.5" width="17" height="17" rx="5" transform="rotate(45 20 20)" fill="#14171c"/><g fill="none" stroke="#f6d646" stroke-width="1.8" stroke-linecap="round"><ellipse cx="20" cy="16.5" rx="5" ry="2"/><path d="M15 16.5v7c0 1.1 2.2 2 5 2s5-.9 5-2v-7M15 20c0 1.1 2.2 2 5 2s5-.9 5-2"/></g></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-api" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4C5.5 4 6.5 8 4 12c2.5 4 1.5 8 4 8M16 4c2.5 0 1.5 4 4 8-2.5 4-1.5 8-4 8"/><path d="M10 12h.01M14 12h.01"/></g></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5" r="2.2"/><circle cx="6" cy="19" r="2.2"/><circle cx="18" cy="9" r="2.2"/><path d="M6 7.2v9.6M18 11.2c0 4-6 3-11 6"/></g></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/></g></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2.2 2.2L15.5 10"/></g></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 8v5M12 16.5h.01" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4.2 4.2 0 0 1-.5 8.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  </svg>
+
   <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
-  <header class="site-header">
-    <div class="wrap">
-      <a class="brand" href="/">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
-        ODataAgentSample
-      </a>
-      <a class="btn btn-ghost btn-small" href="#anmelden">Zugang</a>
-    </div>
-  </header>
 
-  <main id="inhalt">
-    <section class="wrap hero" aria-labelledby="titel">
-      <div>
-        <span class="eyebrow">Live-Demo · Model Context Protocol</span>
-        <h1 id="titel">Frag deine Daten. <span class="grad-text">Ein KI-Agent antwortet – über MCP.</span></h1>
-        <p class="lead">Ein echtes Claude-Modell ruft die Tools eines OData-Dienstes auf, liest Länderdaten und erklärt sein Ergebnis. Jeder Schritt bleibt dabei live sichtbar.</p>
-        <div class="hero-cta">
-          <a class="btn" href="#anmelden">Demo ausprobieren</a>
-          <a class="btn btn-ghost" href="#so-funktioniert-es">So funktioniert es</a>
-        </div>
-      </div>
-
-      <div class="trace-preview" role="img" aria-label="Animierte Vorschau: Der Agent ruft get_country mit Island auf, erhält einen Fehler, korrigiert sich mit search_countries und erhält 21 Treffer.">
-        <div class="trace-title"><span class="trace-dots"><i></i><i></i><i></i></span> Tool-Spur</div>
-        <div class="trace-step">
-          <div><span class="name">get_country</span>(<span class="args">{"code":"Island"}</span>)</div>
-          <span class="st err">✕ Fehler: Kein Land zu 'Island' gefunden. Verwende einen ISO2-Code …</span>
-        </div>
-        <div class="trace-step">
-          <div><span class="name">search_countries</span>(<span class="args">{"text":"Island"}</span>)</div>
-          <span class="st ok">✓ OK: 21 Treffer · 123 ms</span>
-        </div>
-        <div class="trace-step">
-        </div>
-        <div class="trace-answer">Der ISO3-Code von Island ist ISL. <span class="cursor"></span></div>
-      </div>
-    </section>
-
-    <section class="wrap section" id="so-funktioniert-es" aria-labelledby="h-schritte">
-      <h2 id="h-schritte">So funktioniert es</h2>
-      <ol class="steps">
-        <li class="card"><h3>Frage stellen</h3><p>Du schreibst eine Frage zu 264 Ländern und 6 Weltregionen in normaler Sprache.</p></li>
-        <li class="card"><h3>Agent ruft Tools auf</h3><p>Das Modell wählt selbst zwischen <code>search_countries</code>, <code>get_country</code> und <code>list_regions</code> und korrigiert sich bei Fehlern.</p></li>
-        <li class="card"><h3>Antwort mit sichtbarer Spur</h3><p>Du siehst die Antwort und daneben jeden Tool-Aufruf mit Argumenten, Status und Dauer.</p></li>
-      </ol>
-    </section>
-
-    <section class="wrap section two-col" aria-label="Sicherheit und Ehrlichkeit">
-      <div class="card">
-        <h2>Sicher gebaut</h2>
-        <ul class="facts">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><strong>Nur Lesezugriff:</strong> Die Tools können nichts schreiben oder ändern.</span></li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><strong>API-Key serverseitig:</strong> Er gelangt nie in deinen Browser.</span></li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><strong>Rate Limits:</strong> 100 Abfragen pro Stunde für alle, 15 pro Sitzung und Stunde, 400 pro Tag.</span></li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><strong>Keine Personendaten gespeichert:</strong> Es gibt keine Konten und kein Tracking.</span></li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><strong>Zugangscode für Eingeladene:</strong> Ohne Code kein Zugriff.</span></li>
-        </ul>
-      </div>
-      <div class="card">
-        <h2>Ehrlich gesagt</h2>
-        <ul class="facts">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>Es antwortet ein <strong>echtes Modell</strong>. Antworten und Tool-Wege können abweichen.</span></li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>Das Kontingent kann bei einem <strong>Neustart zurückgesetzt</strong> werden.</span></li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>Die Daten sind <strong>flüchtige Demo-Daten</strong> und nicht als Quelle gedacht.</span></li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>Der erste Aufruf kann wegen eines <strong>Kaltstarts</strong> einige Sekunden dauern.</span></li>
-        </ul>
-      </div>
-    </section>
-
-    <section class="wrap section" id="anmelden" aria-labelledby="h-login">
-      <div class="card login-card">
-        <h2 id="h-login">Zugang zur Demo</h2>
-
-        <form id="login-form" novalidate>
-          <p>Den Zugangscode erhältst du vom Betreiber.</p>
-          <div class="field">
-            <label for="code">Zugangscode</label>
-            <input id="code" name="code" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" required>
-          </div>
-          <button class="btn" id="login-btn" type="submit">Anmelden</button>
-        </form>
-
-        <div id="already" class="hidden">
-          <p>Du bist bereits angemeldet.</p>
-          <a class="btn" href="/demo">Zur Demo</a>
-        </div>
-
-        <div id="login-status" class="status info" role="status" aria-live="polite"></div>
-
-        <div class="link-row">
+  <div class="frame">
+    <header>
+      <nav class="utilbar" aria-label="Hilfsnavigation">
+        <div class="wrap">
+          <a href="/" aria-current="page">Demo</a>
+          <a href="/swagger">API-Doku</a>
           <a href="https://github.com/vompa/ODataAgentSample" rel="noopener noreferrer">GitHub</a>
           <a href="https://github.com/vompa/ODataAgentSample/releases" rel="noopener noreferrer">Releases</a>
-          <a href="/swagger">Swagger-Oberfläche</a>
+        </div>
+      </nav>
+      <div class="mainnav">
+        <div class="wrap">
+          <a class="brand" href="/"><svg aria-hidden="true"><use href="#i-logo"/></svg>ODataAgentSample</a>
+          <nav class="navlinks" aria-label="Hauptnavigation">
+            <a href="#so-funktioniert-es">So funktioniert es</a>
+            <a href="#sicherheit">Sicherheit</a>
+            <a href="#anmelden">Zugang</a>
+          </nav>
+          <a class="btn btn-pill" href="#anmelden">Zugang</a>
         </div>
       </div>
-    </section>
-  </main>
+    </header>
 
-  <footer class="site-footer">
-    <div class="wrap">
-      <span>ODataAgentSample · Demo</span>
-    </div>
-  </footer>
+    <main id="inhalt">
+      <section class="hero" aria-labelledby="titel">
+        <div class="wrap">
+          <div class="hero-copy">
+            <span class="pill"><i></i>Live-Demo · Model Context Protocol</span>
+            <h1 id="titel">Frag deine Daten. <span class="mark">Ein KI-Agent antwortet – über MCP.</span></h1>
+            <p class="lead">Ein echtes Claude-Modell ruft die Tools eines OData-Dienstes auf, liest Länderdaten und erklärt sein Ergebnis. Jeder Schritt bleibt dabei live sichtbar.</p>
+            <div class="hero-cta">
+              <a class="btn" href="#anmelden">Demo ausprobieren</a>
+              <a class="btn btn-dark" href="#so-funktioniert-es">So funktioniert es</a>
+            </div>
+          </div>
+
+          <div class="hero-stage">
+            <a class="round-btn hero-arrow" href="#so-funktioniert-es" aria-label="Zu „So funktioniert es“"><svg aria-hidden="true"><use href="#i-down"/></svg></a>
+            <div class="phone" role="img" aria-label="Animierte Vorschau: Der Agent ruft get_country mit Island auf, erhält einen Fehler, korrigiert sich mit search_countries und erhält 21 Treffer. Die Antwort: ISO3-Code ISL.">
+              <div class="phone-screen">
+                <span class="phone-time">09:41</span><span class="phone-bat"></span>
+                <div class="phone-title">Tool-Spur <span>live</span></div>
+                <div class="trace-step is-err">
+                  <div><span class="name">get_country</span>(<span class="args">{"code":"Island"}</span>)</div>
+                  <span class="st err">✕ Fehler: Kein Land zu 'Island' gefunden. Verwende einen ISO2-Code …</span>
+                </div>
+                <div class="trace-step is-ok">
+                  <div><span class="name">search_countries</span>(<span class="args">{"text":"Island"}</span>)</div>
+                  <span class="st ok">✓ OK: 21 Treffer · 123 ms</span>
+                </div>
+                <div class="trace-answer">Der ISO3-Code von Island ist ISL. <span class="cursor"></span></div>
+                <span class="phone-home"></span>
+              </div>
+            </div>
+            <a class="round-btn hero-next" href="#anmelden" aria-label="Zum Zugang"><svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+            <nav class="dots" aria-label="Abschnitte"><a href="#titel" aria-label="Start" aria-current="true"></a><a href="#sicherheit" aria-label="Sicherheit"></a><a href="#anmelden" aria-label="Zugang"></a></nav>
+          </div>
+        </div>
+      </section>
+
+      <section class="wrap section" id="so-funktioniert-es" aria-labelledby="h-schritte">
+        <h2 class="section-title" id="h-schritte">So funktioniert es</h2>
+        <div class="services">
+          <article class="service service-blue">
+            <h3>Ein Agent, der seine Tools sichtbar benutzt</h3>
+            <div class="nums">
+              <div class="num"><b>3 Tools</b><span>search_countries, get_country, list_regions</span></div>
+              <div class="num"><b>nur lesend</b><span>keine Schreibzugriffe</span></div>
+            </div>
+            <a class="btn" href="#anmelden">Zur Anmeldung</a>
+          </article>
+          <article class="service service-green">
+            <h3>Fehler, aus denen er lernt</h3>
+            <p>Scheitert ein Aufruf, liest der Agent die Fehlermeldung und versucht es anders.</p>
+            <div class="mini-trace" aria-label="Beispiel: Fehler, dann Korrektur">
+              <div><span class="bad">✕ Fehler</span><code>get_country("Island")</code></div>
+              <div><span class="good">✓ OK</span><code>search_countries("Island")</code></div>
+            </div>
+          </article>
+        </div>
+        <ol class="steps">
+          <li class="step"><h3>Frage stellen</h3><p>Du schreibst eine Frage zu 264 Ländern und 6 Weltregionen in normaler Sprache.</p></li>
+          <li class="step"><h3>Agent ruft Tools auf</h3><p>Das Modell wählt selbst zwischen <code>search_countries</code>, <code>get_country</code> und <code>list_regions</code> und korrigiert sich bei Fehlern.</p></li>
+          <li class="step"><h3>Antwort mit sichtbarer Spur</h3><p>Du siehst die Antwort und daneben jeden Tool-Aufruf mit Argumenten, Status und Dauer.</p></li>
+        </ol>
+        <ul class="tiles" aria-label="Schnellzugriff">
+          <li><a class="tile" href="/swagger"><span class="ico ico-pink"><svg aria-hidden="true"><use href="#i-api"/></svg></span><span>Swagger-<br>API-Doku</span></a></li>
+          <li><a class="tile" href="https://github.com/vompa/ODataAgentSample" rel="noopener noreferrer"><span class="ico ico-green"><svg aria-hidden="true"><use href="#i-github"/></svg></span><span>GitHub<br><small>Quellcode</small></span></a></li>
+          <li><a class="tile" href="https://github.com/vompa/ODataAgentSample/releases" rel="noopener noreferrer"><span class="ico ico-blue"><svg aria-hidden="true"><use href="#i-tag"/></svg></span><span>Releases<br><small>Versionen</small></span></a></li>
+          <li><a class="tile" href="#sicherheit"><span class="ico ico-lilac"><svg aria-hidden="true"><use href="#i-shield"/></svg></span><span>Sicherheit<br><small>Was geschützt ist</small></span></a></li>
+        </ul>
+      </section>
+
+      <section class="wrap section" aria-labelledby="h-zahlen">
+        <h2 class="section-title" id="h-zahlen">Zahlen &amp; Zusammenhang</h2>
+        <div class="duo">
+          <article class="panel-card">
+            <h2>Zahlen &amp; Grenzen</h2>
+            <table class="limits">
+              <thead><tr><th scope="col">Grenze</th><th scope="col">Wert</th><th scope="col">Gilt für</th></tr></thead>
+              <tbody>
+                <tr><th scope="row" class="lbl">Stunde</th><td class="val">100</td><td class="note">Abfragen für alle zusammen</td></tr>
+                <tr><th scope="row" class="lbl">Sitzung</th><td class="val">15</td><td class="note">pro Sitzung und Stunde</td></tr>
+                <tr><th scope="row" class="lbl">Tag</th><td class="val">400</td><td class="note">Abfragen pro Tag</td></tr>
+                <tr><th scope="row" class="lbl">Frage</th><td class="val">300</td><td class="note">Zeichen pro Frage</td></tr>
+              </tbody>
+            </table>
+            <a class="btn btn-dark" href="#anmelden">Zur Anmeldung</a>
+          </article>
+          <article class="panel-card arch-card">
+            <h2>So hängt es zusammen</h2>
+            <svg class="arch" viewBox="0 0 380 290" role="img" aria-label="Diagramm: Der Browser spricht mit der App, die App mit Claude, Claude mit den MCP-Tools.">
+              <path class="edge" d="M60 230C60 170 90 130 140 130"/>
+              <path class="edge" d="M140 130C190 130 250 150 250 215"/>
+              <path class="edge" d="M250 215C250 160 310 180 310 120"/>
+              <g transform="translate(60 230)"><ellipse class="halo" rx="15" ry="5"/><path class="pin" d="M0 0C-14-16-16-26-16-30a16 16 0 1 1 32 0c0 4-2 14-16 30z"/><circle class="pin-dot" cy="-30" r="6"/></g><g transform="translate(140 130)"><ellipse class="halo" rx="15" ry="5"/><path class="pin" d="M0 0C-14-16-16-26-16-30a16 16 0 1 1 32 0c0 4-2 14-16 30z"/><circle class="pin-dot" cy="-30" r="6"/></g><g transform="translate(250 215)"><ellipse class="halo" rx="15" ry="5"/><path class="pin" d="M0 0C-14-16-16-26-16-30a16 16 0 1 1 32 0c0 4-2 14-16 30z"/><circle class="pin-dot" cy="-30" r="6"/></g><g transform="translate(310 120)"><ellipse class="halo" rx="15" ry="5"/><path class="pin" d="M0 0C-14-16-16-26-16-30a16 16 0 1 1 32 0c0 4-2 14-16 30z"/><circle class="pin-dot" cy="-30" r="6"/></g>
+              <text class="lbl" x="60" y="256" text-anchor="middle">Browser</text><text class="sub" x="60" y="275" text-anchor="middle">Frage</text>
+              <text class="lbl" x="140" y="156" text-anchor="middle">App</text><text class="sub" x="140" y="175" text-anchor="middle">API-Key</text>
+              <text class="lbl" x="250" y="241" text-anchor="middle">Claude</text><text class="sub" x="250" y="260" text-anchor="middle">wählt Tools</text>
+              <text class="lbl" x="310" y="46" text-anchor="middle">MCP</text><text class="sub" x="310" y="65" text-anchor="middle">nur lesend</text>
+            </svg>
+          </article>
+        </div>
+      </section>
+
+      <section class="wrap section" id="sicherheit" aria-labelledby="h-sicher">
+        <h2 class="section-title" id="h-sicher">Sicherheit &amp; Ehrlichkeit</h2>
+        <div class="duo">
+          <article class="panel-card">
+            <h2>Sicher gebaut</h2>
+            <ul class="facts">
+              <li><span class="mk mk-ok"><svg aria-hidden="true"><use href="#i-check"/></svg></span><span><strong>Nur Lesezugriff:</strong> Die Tools können nichts schreiben oder ändern.</span></li>
+              <li><span class="mk mk-ok"><svg aria-hidden="true"><use href="#i-check"/></svg></span><span><strong>API-Key serverseitig:</strong> Er gelangt nie in deinen Browser.</span></li>
+              <li><span class="mk mk-ok"><svg aria-hidden="true"><use href="#i-check"/></svg></span><span><strong>Rate Limits:</strong> 100 Abfragen pro Stunde für alle, 15 pro Sitzung und Stunde, 400 pro Tag.</span></li>
+              <li><span class="mk mk-ok"><svg aria-hidden="true"><use href="#i-check"/></svg></span><span><strong>Datensparsam:</strong> Es gibt keine Konten und kein Tracking. Deine Fragen gehen zur Beantwortung an die Anthropic-API, und die Server-Logs enthalten technisch bedingt IP-Adressen.</span></li>
+              <li><span class="mk mk-ok"><svg aria-hidden="true"><use href="#i-check"/></svg></span><span><strong>Zugangscode für Eingeladene:</strong> Ohne Code kein Zugriff.</span></li>
+            </ul>
+          </article>
+          <article class="panel-card honest">
+            <h2>Ehrlich gesagt</h2>
+            <ul class="facts">
+              <li><span class="mk mk-info"><svg aria-hidden="true"><use href="#i-info"/></svg></span><span>Es antwortet ein <strong>echtes Modell</strong>. Antworten und Tool-Wege können abweichen.</span></li>
+              <li><span class="mk mk-info"><svg aria-hidden="true"><use href="#i-info"/></svg></span><span>Das Kontingent kann bei einem <strong>Neustart zurückgesetzt</strong> werden.</span></li>
+              <li><span class="mk mk-info"><svg aria-hidden="true"><use href="#i-info"/></svg></span><span>Die Daten sind <strong>flüchtige Demo-Daten</strong> und nicht als Quelle gedacht.</span></li>
+              <li><span class="mk mk-info"><svg aria-hidden="true"><use href="#i-info"/></svg></span><span>Der erste Aufruf kann wegen eines <strong>Kaltstarts</strong> einige Sekunden dauern.</span></li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="wrap section banner-section" id="anmelden" aria-labelledby="h-login">
+        <div class="banner">
+          <div class="banner-bg"></div>
+          <div class="banner-copy">
+            <h2 id="h-login">Zugang zur Demo</h2>
+            <ul class="badges" aria-label="Eckdaten">
+              <li>Nur lesend</li><li>Echtes Modell</li><li>Live-Tool-Spur</li>
+            </ul>
+
+            <form id="login-form" novalidate>
+              <p>Den Zugangscode erhältst du vom Betreiber.</p>
+              <div class="field">
+                <label for="code">Zugangscode</label>
+                <input id="code" name="code" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+              </div>
+              <button class="btn btn-dark" id="login-btn" type="submit">Anmelden</button>
+            </form>
+
+            <div id="already" class="hidden">
+              <p>Du bist bereits angemeldet.</p>
+              <a class="btn btn-dark" href="/demo">Zur Demo</a>
+            </div>
+
+            <div id="login-status" class="status info" role="status" aria-live="polite"></div>
+
+            <div class="link-row">
+              <a href="https://github.com/vompa/ODataAgentSample" rel="noopener noreferrer">GitHub</a>
+              <a href="https://github.com/vompa/ODataAgentSample/releases" rel="noopener noreferrer">Releases</a>
+              <a href="/swagger">Swagger-Oberfläche</a>
+            </div>
+          </div>
+          <div class="banner-phone" aria-hidden="true">
+            <div class="bp-screen">
+              <div class="bp-title">Kontingent <i></i></div>
+              <div class="bp-card"><b>264 Länder</b><span>6 Weltregionen · nur lesend</span></div>
+              <div class="bp-sheet">
+                <h4>Limits</h4>
+                <div class="bp-row"><i class="ico-blue"></i>Stunde<em>100</em></div>
+                <div class="bp-row"><i class="ico-green"></i>Sitzung<em>15</em></div>
+                <div class="bp-row"><i class="ico-pink"></i>Tag<em>400</em></div>
+                <div class="bp-row"><i class="ico-lilac"></i>Zeichen<em>300</em></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="wrap section" aria-labelledby="h-projekt">
+        <h2 class="section-title" id="h-projekt">Aus dem Projekt</h2>
+        <ul class="projects">
+          <li class="project">
+            <div class="project-art art-1"><svg aria-hidden="true"><use href="#i-tag"/></svg></div>
+            <p>Release v1.4.0<small>Länderdaten-Agent auf GitHub</small></p>
+            <a class="btn btn-small" href="https://github.com/vompa/ODataAgentSample/releases" rel="noopener noreferrer">Lesen<span class="sr-only"> – Releases auf GitHub</span></a>
+          </li>
+          <li class="project">
+            <div class="project-art art-2"><svg aria-hidden="true"><use href="#i-api"/></svg></div>
+            <p>Swagger-Oberfläche<small>Die API direkt im Browser ausprobieren</small></p>
+            <a class="btn btn-small" href="/swagger">Lesen<span class="sr-only"> – Swagger-Oberfläche</span></a>
+          </li>
+          <li class="project">
+            <div class="project-art art-3"><svg aria-hidden="true"><use href="#i-cloud"/></svg></div>
+            <p>Azure-Deployment<small>So läuft die Demo online</small></p>
+            <a class="btn btn-small" href="https://github.com/vompa/ODataAgentSample" rel="noopener noreferrer">Lesen<span class="sr-only"> – Projekt auf GitHub</span></a>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div class="foot-top">
+          <a class="brand" href="/"><svg aria-hidden="true"><use href="#i-logo"/></svg>ODataAgentSample</a>
+          <div class="foot-cta"><span>Bereit loszulegen?</span><a class="btn btn-small" href="#anmelden">Demo starten</a></div>
+        </div>
+        <div class="foot-cols">
+          <div><h4>Projekt</h4><ul>
+            <li><a href="https://github.com/vompa/ODataAgentSample" rel="noopener noreferrer">GitHub</a></li>
+            <li><a href="https://github.com/vompa/ODataAgentSample/releases" rel="noopener noreferrer">Releases</a></li>
+            <li><a href="/swagger">Swagger-Oberfläche</a></li></ul></div>
+          <div><h4>Sicherheit</h4><ul>
+            <li><a href="#sicherheit">Nur Lesezugriff</a></li>
+            <li><a href="#sicherheit">Rate Limits</a></li>
+            <li><a href="#anmelden">Zugangscode</a></li></ul></div>
+          <div><h4>Technik</h4><ul>
+            <li>Model Context Protocol</li><li>OData-Dienst</li><li>Claude</li></ul></div>
+          <div><h4>Demo</h4><ul>
+            <li><a href="#so-funktioniert-es">So funktioniert es</a></li>
+            <li><a href="#anmelden">Anmelden</a></li></ul></div>
+        </div>
+        <div class="foot-bar"><span>ODataAgentSample · Demo</span><span>Reiner Lesezugriff · Flüchtige Demo-Daten</span></div>
+      </div>
+    </footer>
+  </div>
 </body>
 </html>
