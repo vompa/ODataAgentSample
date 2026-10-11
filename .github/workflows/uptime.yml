@@ -1,0 +1,33 @@
+name: Uptime
+
+# Stündliche Verfügbarkeitsprüfung der öffentlichen Demo. Schlägt der Job fehl,
+# benachrichtigt GitHub den Besitzer standardmäßig per E-Mail.
+#
+# Hinweis: GitHub deaktiviert geplante Workflows nach 60 Tagen ohne Aktivität im
+# Repository. Dann im Actions-Tab den Workflow wieder aktivieren.
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Demo, Landingpage und Hauptseite prüfen
+        shell: bash
+        run: |
+          set -euo pipefail
+          for url in \
+            https://demo.vompa.dev/health \
+            https://demo.vompa.dev/ \
+            https://vompa.dev/; do
+            echo "Prüfe $url"
+            curl --fail --silent --show-error --output /dev/null \
+              --retry 3 --retry-delay 20 --max-time 30 "$url"
+          done
