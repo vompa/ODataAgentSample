@@ -57,6 +57,7 @@ public sealed partial class DemoPageTests : IDisposable
     [InlineData("/assets/site.css", "text/css")]
     [InlineData("/assets/landing.js", "text/javascript")]
     [InlineData("/assets/demo.js", "text/javascript")]
+    [InlineData("/assets/og-image.jpg", "image/jpeg")]
     public async Task Assets_are_served_with_the_right_type(string path, string mediaType)
     {
         using var client = _app.CreateClient();
@@ -69,6 +70,8 @@ public sealed partial class DemoPageTests : IDisposable
 
     [Theory]
     [InlineData("/assets/gibt-es-nicht.js")]
+    [InlineData("/assets/gibt-es-nicht.png")]
+    [InlineData("/assets/og-image.gif")]
     [InlineData("/assets/..%2Fappsettings.json")]
     [InlineData("/assets/%2e%2e%2f%2e%2e%2fProgram.cs")]
     public async Task Only_the_known_files_are_served(string path)
@@ -78,6 +81,48 @@ public sealed partial class DemoPageTests : IDisposable
         using var response = await client.GetAsync(new Uri(path, UriKind.Relative));
 
         Assert.NotEqual(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task The_preview_image_is_a_real_jpeg_of_reasonable_size_with_the_security_headers()
+    {
+        using var client = _app.CreateClient();
+
+        using var response = await client.GetAsync(new Uri("/assets/og-image.jpg", UriKind.Relative));
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
+        Assert.True(bytes.Length is > 1_000 and < 150_000, $"Das Vorschaubild hat {bytes.Length} Bytes.");
+        Assert.Equal([0xFF, 0xD8, 0xFF], bytes[..3]);
+    }
+
+    [Theory]
+    [InlineData("/", "https://demo.vompa.dev/")]
+    [InlineData("/demo", "https://demo.vompa.dev/demo")]
+    public async Task Pages_carry_link_preview_metadata_that_points_to_the_served_image(string path, string url)
+    {
+        using var client = _app.CreateClient();
+
+        var html = await client.GetStringAsync(new Uri(path, UriKind.Relative));
+
+        Assert.Contains($"<meta property=\"og:url\" content=\"{url}\">", html, StringComparison.Ordinal);
+        Assert.Contains($"<link rel=\"canonical\" href=\"{url}\">", html, StringComparison.Ordinal);
+        Assert.Contains("<meta property=\"og:image\" content=\"https://demo.vompa.dev/assets/og-image.jpg\">", html, StringComparison.Ordinal);
+        Assert.Contains("<meta name=\"twitter:card\" content=\"summary_large_image\">", html, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/demo")]
+    public async Task Pages_link_to_imprint_and_privacy_policy_on_the_main_site(string path)
+    {
+        using var client = _app.CreateClient();
+
+        var html = await client.GetStringAsync(new Uri(path, UriKind.Relative));
+
+        Assert.Contains("href=\"https://vompa.dev/impressum.html\"", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"https://vompa.dev/datenschutz.html\"", html, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -106,7 +151,7 @@ public sealed partial class DemoPageTests : IDisposable
     public async Task The_pages_load_only_their_own_scripts_and_styles()
     {
         using var client = _app.CreateClient();
-        var external = new Regex(@"(src|href)\s*=\s*""https?://(?!github\.com/vompa/)", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(2));
+        var external = new Regex(@"(src|href)\s*=\s*""https?://(?!github\.com/vompa/|vompa\.dev/(impressum|datenschutz)\.html|demo\.vompa\.dev/)", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(2));
 
         foreach (var path in new[] { "/", "/demo" })
         {

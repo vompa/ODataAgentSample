@@ -363,6 +363,9 @@ input:focus-visible, textarea:focus-visible { outline: 3px solid var(--focus); o
 .foot-cols a { text-decoration: none; }
 .foot-cols a:hover { text-decoration: underline; color: var(--text); }
 .foot-bar { border-top: 1px solid var(--line); padding-block: 16px 22px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; font-size: .78rem; color: var(--muted); }
+.foot-legal { display: flex; gap: 6px 16px; }
+.foot-legal a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.foot-legal a:hover { color: var(--text); }
 
 /* Demo */
 .demo-head .wrap { display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; padding-block: 14px; }

@@ -86,7 +86,8 @@ dann gesetzt sein:
 | `DEMO_API_KEY` | zufälliger Reader-Key, mindestens 32 Zeichen, mit dem die Demo ihren eigenen `/mcp` aufruft |
 
 Nach dem Deployment sind unter der App-Adresse `/` (Landingpage) und `/demo` erreichbar. Impressum und
-Datenschutzseite gibt es bewusst nicht (nur Länderdaten, Lesezugriff für wenige Eingeladene). Zum Abschalten das Secret `DEMO_ANTHROPIC_API_KEY` leeren und neu ausrollen.
+Datenschutzerklärung liegen auf vompa.dev und sind im Footer verlinkt. Die Verfügbarkeit prüft stündlich der Workflow
+`.github/workflows/uptime.yml` (GitHub deaktiviert geplante Workflows nach 60 Tagen ohne Repo-Aktivität, dann im Actions-Tab wieder aktivieren). Zum Abschalten das Secret `DEMO_ANTHROPIC_API_KEY` leeren und neu ausrollen.
 Zu den Limits und Grenzen siehe den README-Abschnitt „Öffentliche Demo mit Chat“.
 
 ### Optional: eigene Domain

@@ -175,7 +175,9 @@ gesetzt sein, sonst startet die App nicht.
   Kostengrenze ist daher das **Ausgabenlimit in der Anthropic-Konsole**, das du vorher setzen solltest.
 - Ob eine Frage zum Thema passt, entscheidet am Ende das Modell. Der Systemtext begrenzt es auf die Länderdaten, ein
   harter Schutz ist das nicht. Die Limits begrenzen den Schaden.
-- Es gibt bewusst **kein Impressum und keine Datenschutzseite**: Die Daten sind nur Länderdaten, der Zugang ist reiner Lesezugriff für wenige Eingeladene. Die Prompts gehen zur Beantwortung an die Anthropic-API, die Server-Logs enthalten IP-Adressen. Wer die Demo weiter öffnet, sollte das neu bewerten.
+- Impressum und Datenschutzerklärung liegen auf [vompa.dev](https://vompa.dev) und sind im Footer der Demo verlinkt. Die App selbst hat dafür keine Seiten. Die Prompts gehen zur Beantwortung an die Anthropic-API, die Server-Logs enthalten IP-Adressen.
+- Für Link-Vorschauen (WhatsApp, LinkedIn, Slack, Teams) liefert die Demo ein Vorschaubild (`assets/og-image.jpg`) samt Open-Graph-Metadaten aus.
+- Der Workflow `.github/workflows/uptime.yml` prüft stündlich, ob `demo.vompa.dev` und `vompa.dev` erreichbar sind; bei einem Fehlschlag mailt GitHub den Besitzer.
 - Die Tests prüfen alles außer dem echten Modellaufruf (dafür braucht es einen Anthropic-Key).
 
 ### An einen Agenten anbinden
