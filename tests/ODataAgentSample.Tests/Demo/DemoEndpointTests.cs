@@ -108,7 +108,7 @@ public sealed partial class DemoPageTests : IDisposable
 
         Assert.Contains($"<meta property=\"og:url\" content=\"{url}\">", html, StringComparison.Ordinal);
         Assert.Contains($"<link rel=\"canonical\" href=\"{url}\">", html, StringComparison.Ordinal);
-        Assert.Contains("<meta property=\"og:image\" content=\"https://demo.vompa.dev/assets/og-image.jpg\">", html, StringComparison.Ordinal);
+        Assert.Contains("<meta property=\"og:image\" content=\"https://demo.vompa.dev/assets/og-image.jpg?v=2\">", html, StringComparison.Ordinal);
         Assert.Contains("<meta name=\"twitter:card\" content=\"summary_large_image\">", html, StringComparison.Ordinal);
     }
 
